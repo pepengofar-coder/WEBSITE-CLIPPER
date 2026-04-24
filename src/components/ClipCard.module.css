@@ -69,6 +69,11 @@
   background: var(--accent-primary);
   opacity: 0.4;
   animation: waveform 1.5s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.previewWave span.waveAnim {
+  animation-play-state: running;
 }
 
 .previewLabel {

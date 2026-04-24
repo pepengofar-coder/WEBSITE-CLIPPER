@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import ViralBadge from './ViralBadge';
 import { formatDuration } from '../utils/mockData';
@@ -12,6 +13,7 @@ const CAPTION_STYLE_CLASS = {
 
 export default function ClipCard({ clip, index }) {
   const dispatch = useAppDispatch();
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleEdit = () => {
     dispatch({ type: 'OPEN_EDIT_MODAL', payload: clip });
@@ -21,13 +23,18 @@ export default function ClipCard({ clip, index }) {
     dispatch({ type: 'OPEN_EXPORT', payload: clip });
   };
 
+  const togglePlay = () => {
+    setIsPlaying(!isPlaying);
+  };
+
   // Generate random waveform bar heights for preview
   const waveBars = Array.from({ length: 20 }, (_, i) => (
     <span
       key={i}
+      className={isPlaying ? styles.waveAnim : ''}
       style={{
         height: `${6 + Math.random() * 22}px`,
-        animationDelay: `${i * 0.08}s`,
+        animationDelay: isPlaying ? `${i * 0.08}s` : '0s',
       }}
     />
   ));
@@ -46,8 +53,12 @@ export default function ClipCard({ clip, index }) {
           <span className={styles.previewLabel}>9:16 Preview</span>
         </div>
         <div className={styles.previewGradient}>
-          <button className={styles.playBtn} aria-label="Play preview">
-            ▶
+          <button 
+            className={styles.playBtn} 
+            onClick={togglePlay} 
+            aria-label={isPlaying ? "Pause preview" : "Play preview"}
+          >
+            {isPlaying ? '⏸️' : '▶'}
           </button>
         </div>
         {/* Caption preview */}

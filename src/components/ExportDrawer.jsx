@@ -47,7 +47,18 @@ export default function ExportDrawer() {
   const handleDownload = async () => {
     // Mark as exported in Supabase
     await actions.exportClip(exportingClip.id);
-    alert(`Downloaded: ${exportingClip.title}.mp4`);
+    
+    // Simulate real file download
+    const dummyBlob = new Blob(['Simulated MP4 content'], { type: 'video/mp4' });
+    const url = URL.createObjectURL(dummyBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${exportingClip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_clipforge.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     handleClose();
   };
 
