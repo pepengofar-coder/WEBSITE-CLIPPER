@@ -24,7 +24,7 @@ export default function ExportDrawer() {
 
   // Check if subtitle already stored on this clip
   useEffect(() => {
-    if (exportingClip?.subtitle_srt) setSubtitleReady(true);
+    if (exportingClip?.subtitleSrt) setSubtitleReady(true);
     else setSubtitleReady(false);
   }, [exportingClip]);
 
@@ -71,7 +71,7 @@ export default function ExportDrawer() {
     zip.file(`${safeName}_4k.mp4`, dummyMp4);
 
     // SRT subtitle if available
-    const srt = exportingClip.subtitle_srt;
+    const srt = exportingClip.subtitleSrt;
     if (srt) {
       zip.file(`${safeName}_subtitles.srt`, srt);
     }
@@ -218,7 +218,7 @@ export default function ExportDrawer() {
                 >
                   <span className={styles.srtLabel}>SRT Preview:</span>
                   <pre className={styles.srtContent}>
-                    {(exportingClip.subtitle_srt || '').split('\n').slice(0, 9).join('\n')}
+                    {(exportingClip.subtitleSrt || '').split('\n').slice(0, 9).join('\n')}
                     {'\n...'}
                   </pre>
                 </motion.div>

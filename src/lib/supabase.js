@@ -130,9 +130,11 @@ export async function updateClip(clipId, updates) {
   if (updates.duration !== undefined) dbUpdates.duration = updates.duration;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.title !== undefined) dbUpdates.title = updates.title;
-  // Subtitle fields
-  if (updates.subtitle_srt !== undefined) dbUpdates.subtitle_srt = updates.subtitle_srt;
-  if (updates.subtitle_lang !== undefined) dbUpdates.subtitle_lang = updates.subtitle_lang;
+  // Subtitle fields (accept both camelCase and snake_case)
+  if (updates.subtitleSrt !== undefined) dbUpdates.subtitle_srt = updates.subtitleSrt;
+  else if (updates.subtitle_srt !== undefined) dbUpdates.subtitle_srt = updates.subtitle_srt;
+  if (updates.subtitleLang !== undefined) dbUpdates.subtitle_lang = updates.subtitleLang;
+  else if (updates.subtitle_lang !== undefined) dbUpdates.subtitle_lang = updates.subtitle_lang;
 
   const { data, error } = await supabase
     .from('cf_clips')
@@ -172,7 +174,7 @@ export function dbClipToApp(dbClip) {
     captionStyle: dbClip.caption_style,
     transcript: dbClip.transcript,
     status: dbClip.status,
-    subtitle_srt: dbClip.subtitle_srt,
+    subtitleSrt: dbClip.subtitle_srt,
     subtitleLang: dbClip.subtitle_lang,
     createdAt: dbClip.created_at,
   };

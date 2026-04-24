@@ -63,7 +63,7 @@ export default function ClipCard({ clip, index }) {
         </div>
 
         {/* Subtitle indicator */}
-        {clip.subtitle_srt && (
+        {clip.subtitleSrt && (
           <div className={styles.subtitleBadge}>
             🗒️ {clip.subtitleLang?.toUpperCase() || 'SUB'}
           </div>

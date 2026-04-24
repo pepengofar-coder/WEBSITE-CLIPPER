@@ -137,17 +137,17 @@ function appReducer(state, action) {
         ...state,
         clips: state.clips.map(c =>
           c.id === action.payload.id
-            ? { ...c, subtitle_srt: action.payload.subtitle_srt, subtitleLang: action.payload.lang }
+            ? { ...c, subtitleSrt: action.payload.subtitleSrt, subtitleLang: action.payload.lang }
             : c
         ),
         // Also update selectedClip / exportingClip if they match
         selectedClip:
           state.selectedClip?.id === action.payload.id
-            ? { ...state.selectedClip, subtitle_srt: action.payload.subtitle_srt }
+            ? { ...state.selectedClip, subtitleSrt: action.payload.subtitleSrt }
             : state.selectedClip,
         exportingClip:
           state.exportingClip?.id === action.payload.id
-            ? { ...state.exportingClip, subtitle_srt: action.payload.subtitle_srt }
+            ? { ...state.exportingClip, subtitleSrt: action.payload.subtitleSrt }
             : state.exportingClip,
       };
 
@@ -253,13 +253,13 @@ export function AppProvider({ children }) {
 
       // 3. Persist to Supabase (best-effort — don't block on failure)
       try {
-        await updateClipApi(clip.id, { subtitle_srt: srt });
+        await updateClipApi(clip.id, { subtitleSrt: srt, subtitleLang: targetLang });
       } catch (_) {}
 
       // 4. Update local state
       dispatch({
         type: 'SAVE_SUBTITLE',
-        payload: { id: clip.id, subtitle_srt: srt, lang: targetLang },
+        payload: { id: clip.id, subtitleSrt: srt, lang: targetLang },
       });
 
       dispatch({ type: 'SET_TOAST', payload: { message: '✅ Subtitles generated successfully!', type: 'success' } });
