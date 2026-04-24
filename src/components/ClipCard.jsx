@@ -17,15 +17,20 @@ export default function ClipCard({ clip, index }) {
   const dispatch = useAppDispatch();
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const handleEdit = () => {
+  const handleEdit = (e) => {
+    e.stopPropagation();
     dispatch({ type: 'OPEN_EDIT_MODAL', payload: clip });
   };
 
-  const handleDownload = () => {
+  const handleDownload = (e) => {
+    e.stopPropagation();
     dispatch({ type: 'OPEN_EXPORT', payload: clip });
   };
 
-  const togglePlay = () => setIsPlaying(prev => !prev);
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    setIsPlaying(prev => !prev);
+  };
 
   return (
     <motion.div

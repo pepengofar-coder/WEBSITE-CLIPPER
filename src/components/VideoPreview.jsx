@@ -4,6 +4,10 @@ import { useRef, useEffect } from 'react';
  * Shared 9:16 video preview component.
  * - If the URL is a YouTube link → renders a YouTube iframe embed.
  * - Otherwise → falls back to a looping demo video.
+ *
+ * IMPORTANT: The iframe wrapper and the iframe itself both have
+ * pointerEvents: 'none' to prevent focus-stealing that would
+ * break click events on surrounding React components.
  */
 export function extractYouTubeId(url) {
   if (!url) return null;
@@ -33,11 +37,15 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
     aspectRatio: '9 / 16',
     background: '#000',
     overflow: 'hidden',
+    // CRITICAL: prevent iframe from stealing pointer events from parent
+    isolation: 'isolate',
     ...style,
   };
 
   if (ytId) {
-    // Build YouTube embed URL with appropriate params
+    // YouTube is 16:9; to fit it inside a 9:16 container we scale it up.
+    // Width needs to be (16/9)/(9/16) = (16*16)/(9*9) ≈ 316% of the container width,
+    // centered, so the middle portion (9:16) fills the frame.
     const src =
       `https://www.youtube.com/embed/${ytId}` +
       `?autoplay=${isPlaying ? 1 : 0}` +
@@ -47,28 +55,37 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
       `&controls=0` +
       `&modestbranding=1` +
       `&rel=0` +
+      `&enablejsapi=0` +
       `&start=${Math.floor(startTime)}`;
 
     return (
       <div style={containerStyle}>
-        {/* Oversized iframe: we center it horizontally to simulate 9:16 crop */}
+        {/* Scale the 16:9 iframe to fill the 9:16 space */}
         <div
           style={{
             position: 'absolute',
-            top: 0,
+            top: '50%',
             left: '50%',
-            transform: 'translateX(-50%)',
-            width: '56.25%',   /* 100% * (9/16) */
-            height: '100%',
+            // 16:9 → 9:16: width = 316%, height = 178% (or keep aspect-ratio via transform)
+            width: '316%',
+            aspectRatio: '16 / 9',
+            transform: 'translate(-50%, -50%)',
+            // Block ALL pointer events so iframe doesn't steal clicks
             pointerEvents: 'none',
           }}
         >
           <iframe
             src={src}
-            style={{ width: '100%', height: '100%', border: 'none' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              // Also block on the iframe element itself
+              pointerEvents: 'none',
+            }}
             allow="autoplay; encrypted-media"
-            allowFullScreen
             title="YouTube video preview"
+            tabIndex={-1}
           />
         </div>
       </div>
@@ -84,7 +101,13 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
         loop
         muted
         playsInline
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          // Native video should also not steal pointer events
+          pointerEvents: 'none',
+        }}
       />
     </div>
   );

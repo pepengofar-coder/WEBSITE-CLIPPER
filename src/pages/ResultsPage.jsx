@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAppState, useAppDispatch } from '../context/AppContext';
@@ -10,6 +11,13 @@ export default function ResultsPage() {
   const { clips, source, isEditModalOpen, isExportDrawerOpen } = useAppState();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  // Ensure body scroll is always restored when no modal is open
+  useEffect(() => {
+    if (!isEditModalOpen && !isExportDrawerOpen) {
+      document.body.style.overflow = '';
+    }
+  }, [isEditModalOpen, isExportDrawerOpen]);
 
   const handleNewClip = () => {
     dispatch({ type: 'RESET' });
