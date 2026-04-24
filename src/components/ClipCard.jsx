@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import ViralBadge from './ViralBadge';
 import { formatDuration } from '../utils/mockData';
@@ -14,6 +14,7 @@ const CAPTION_STYLE_CLASS = {
 export default function ClipCard({ clip, index }) {
   const dispatch = useAppDispatch();
   const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
 
   const handleEdit = () => {
     dispatch({ type: 'OPEN_EDIT_MODAL', payload: clip });
@@ -24,20 +25,14 @@ export default function ClipCard({ clip, index }) {
   };
 
   const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
     setIsPlaying(!isPlaying);
   };
-
-  // Generate random waveform bar heights for preview
-  const waveBars = Array.from({ length: 20 }, (_, i) => (
-    <span
-      key={i}
-      className={isPlaying ? styles.waveAnim : ''}
-      style={{
-        height: `${6 + Math.random() * 22}px`,
-        animationDelay: isPlaying ? `${i * 0.08}s` : '0s',
-      }}
-    />
-  ));
 
   return (
     <motion.div
@@ -48,10 +43,14 @@ export default function ClipCard({ clip, index }) {
     >
       {/* 9:16 Preview */}
       <div className={styles.previewArea}>
-        <div className={styles.previewVisual}>
-          <div className={styles.previewWave}>{waveBars}</div>
-          <span className={styles.previewLabel}>9:16 Preview</span>
-        </div>
+        <video 
+          ref={videoRef}
+          src="https://www.w3schools.com/html/mov_bbb.mp4" 
+          loop 
+          muted 
+          playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+        />
         <div className={styles.previewGradient}>
           <button 
             className={styles.playBtn} 

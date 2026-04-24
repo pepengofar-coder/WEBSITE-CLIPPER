@@ -42,17 +42,6 @@ export default function EditModal() {
     if (e.target === e.currentTarget) handleClose();
   };
 
-  // Waveform preview bars
-  const waveBars = Array.from({ length: 16 }, (_, i) => (
-    <span
-      key={i}
-      style={{
-        height: `${4 + Math.random() * 16}px`,
-        animationDelay: `${i * 0.07}s`,
-      }}
-    />
-  ));
-
   const captionStyleClass = {
     'bold-pop': styles.boldPop,
     'neon-glow': styles.neonGlow,
@@ -92,9 +81,18 @@ export default function EditModal() {
           {/* Body */}
           <div className={styles.modalBody}>
             {/* Preview */}
-            <div className={styles.previewContainer}>
-              <div className={styles.previewWave}>{waveBars}</div>
-              <span className={styles.previewText}>Live Preview</span>
+            <div className={styles.previewContainer} style={{ position: 'relative', overflow: 'hidden' }}>
+              <video 
+                src="https://www.w3schools.com/html/mov_bbb.mp4" 
+                loop 
+                muted 
+                autoPlay
+                playsInline
+                style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+              />
+              <div style={{ position: 'absolute', bottom: '10px', left: 0, right: 0, textAlign: 'center', zIndex: 2 }}>
+                <span className={styles.previewText} style={{ background: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: '4px' }}>Live Preview</span>
+              </div>
             </div>
 
             {/* Start Time Slider */}

@@ -110,7 +110,7 @@ export default function ExportDrawer() {
           <div className={styles.specs}>
             <div className={styles.specRow}>
               <span className={styles.specLabel}>Resolution</span>
-              <span className={styles.specValue}>1080 × 1920 (9:16)</span>
+              <span className={styles.specValue}>2160 × 3840 (4K 9:16)</span>
             </div>
             <div className={styles.specRow}>
               <span className={styles.specLabel}>Format</span>
