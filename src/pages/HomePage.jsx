@@ -20,13 +20,13 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
         >
-          <span className={styles.badge}>✨ AI-Powered Clip Generator</span>
+          <span className={styles.badge}>✨ Generator Klip Bertenaga AI</span>
           <h1 className={styles.heroTitle}>
-            Turn Any Video Into{' '}
-            <span className={styles.heroTitleGradient}>Viral Short Clips</span>
+            Ubah Video Apapun Jadi{' '}
+            <span className={styles.heroTitleGradient}>Klip Pendek Viral</span>
           </h1>
           <p className={styles.heroSubtitle}>
-            Paste a link. Get scroll-stopping clips optimized for TikTok, Reels &amp; YouTube Shorts — ready in seconds.
+            Tempel link. Dapatkan klip siap scroll yang dioptimalkan untuk TikTok, Reels &amp; YouTube Shorts — siap dalam hitungan detik.
           </p>
         </motion.div>
 
@@ -48,9 +48,9 @@ export default function HomePage() {
         <div className={styles.footer}>
           <span>© 2026 ClipForge</span>
           <span>•</span>
-          <a href="#privacy">Privacy</a>
+          <a href="#privacy">Privasi</a>
           <span>•</span>
-          <a href="#terms">Terms</a>
+          <a href="#terms">Ketentuan</a>
         </div>
       </div>
     </div>

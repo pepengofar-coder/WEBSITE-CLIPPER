@@ -32,11 +32,11 @@ export default function Navbar() {
 
       <div className={styles.navLinks}>
         {isHome && (
-          <a href="#features" className={styles.navLink}>How it Works</a>
+          <a href="#features" className={styles.navLink}>Cara Kerja</a>
         )}
         {hasResults && !isHome && (
           <button className={styles.newClipBtn} onClick={handleNewClip}>
-            ← New Clip
+            ← Klip Baru
           </button>
         )}
       </div>

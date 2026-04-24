@@ -12,7 +12,6 @@ export default function ResultsPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  // Ensure body scroll is always restored when no modal is open
   useEffect(() => {
     if (!isEditModalOpen && !isExportDrawerOpen) {
       document.body.style.overflow = '';
@@ -30,14 +29,14 @@ export default function ResultsPage() {
         <div className={styles.content}>
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>🎬</div>
-            <h3>No clips generated yet</h3>
-            <p>Paste a video link on the home page to get started.</p>
+            <h3>Belum ada klip yang dibuat</h3>
+            <p>Tempel link video di halaman utama untuk memulai.</p>
             <button
               className={`${styles.headerBtn} ${styles.newClipBtn}`}
               onClick={handleNewClip}
               style={{ marginTop: '16px', display: 'inline-flex' }}
             >
-              ← Go Home
+              ← Kembali
             </button>
           </div>
         </div>
@@ -45,7 +44,6 @@ export default function ResultsPage() {
     );
   }
 
-  // Sort clips by viral score (highest first)
   const sortedClips = [...clips].sort((a, b) => b.viralScore - a.viralScore);
 
   return (
@@ -62,10 +60,10 @@ export default function ResultsPage() {
         >
           <div className={styles.headerLeft}>
             <h2 className={styles.headerTitle}>
-              🎉 Found <span className={styles.clipCount}>{clips.length} Viral Moments</span>!
+              🎉 Ditemukan <span className={styles.clipCount}>{clips.length} Momen Viral</span>!
             </h2>
             {source && (
-              <p className={styles.sourceTitle}>Source: "{source.title}"</p>
+              <p className={styles.sourceTitle}>Sumber: "{source.title}"</p>
             )}
           </div>
           <div className={styles.headerActions}>
@@ -73,10 +71,10 @@ export default function ResultsPage() {
               className={`${styles.headerBtn} ${styles.newClipBtn}`}
               onClick={handleNewClip}
             >
-              ← New Clip
+              ← Klip Baru
             </button>
             <button className={`${styles.headerBtn} ${styles.downloadAllBtn}`}>
-              ⬇ Download All
+              ⬇ Unduh Semua
             </button>
           </div>
         </motion.div>

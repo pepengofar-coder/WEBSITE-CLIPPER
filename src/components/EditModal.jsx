@@ -12,7 +12,7 @@ export default function EditModal() {
   const [startTime, setStartTime] = useState(selectedClip?.startTime || 0);
   const [endTime, setEndTime] = useState(selectedClip?.endTime || 60);
   const [captionStyle, setCaptionStyle] = useState(selectedClip?.captionStyle || 'bold-pop');
-  const [isPlaying, setIsPlaying] = useState(true); // autoplay in editor
+  const [isPlaying, setIsPlaying] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -71,9 +71,9 @@ export default function EditModal() {
           {/* Header */}
           <div className={styles.modalHeader}>
             <h3 className={styles.modalTitle}>
-              ✏️ Edit Clip — "{selectedClip.title}"
+              ✏️ Edit Klip — "{selectedClip.title}"
             </h3>
-            <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">
+            <button className={styles.closeBtn} onClick={handleClose} aria-label="Tutup">
               ✕
             </button>
           </div>
@@ -88,21 +88,20 @@ export default function EditModal() {
                 startTime={startTime}
                 style={{ borderRadius: '12px', overflow: 'hidden' }}
               />
-              {/* Play/pause toggle over the preview */}
               <button
                 className={styles.previewPlayBtn}
                 onClick={() => setIsPlaying(p => !p)}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
+                aria-label={isPlaying ? 'Jeda' : 'Putar'}
               >
-                {isPlaying ? '⏸ Pause' : '▶ Play'}
+                {isPlaying ? '⏸ Jeda' : '▶ Putar'}
               </button>
-              <div className={styles.liveLabel}>Live Preview</div>
+              <div className={styles.liveLabel}>Preview Langsung</div>
             </div>
 
             {/* Start Time Slider */}
             <div className={styles.sliderSection}>
               <label className={styles.sliderLabel}>
-                Start Time <span className={styles.timeValue}>{formatTimestamp(startTime)}</span>
+                Waktu Mulai <span className={styles.timeValue}>{formatTimestamp(startTime)}</span>
               </label>
               <input
                 type="range"
@@ -118,7 +117,7 @@ export default function EditModal() {
             {/* End Time Slider */}
             <div className={styles.sliderSection}>
               <label className={styles.sliderLabel}>
-                End Time <span className={styles.timeValue}>{formatTimestamp(endTime)}</span>
+                Waktu Selesai <span className={styles.timeValue}>{formatTimestamp(endTime)}</span>
               </label>
               <input
                 type="range"
@@ -133,7 +132,7 @@ export default function EditModal() {
 
             {/* Caption Style Picker */}
             <div className={styles.captionSection}>
-              <label className={styles.captionLabel}>Caption Style</label>
+              <label className={styles.captionLabel}>Gaya Caption</label>
               <div className={styles.captionOptions}>
                 {CAPTION_STYLES.map((cs) => (
                   <button
@@ -155,10 +154,10 @@ export default function EditModal() {
           {/* Footer */}
           <div className={styles.modalFooter}>
             <button className={styles.cancelBtn} onClick={handleClose}>
-              Cancel
+              Batal
             </button>
             <button className={styles.saveBtn} onClick={handleSave} disabled={isSaving}>
-              {isSaving ? '⏳ Saving...' : '💾 Save Changes'}
+              {isSaving ? '⏳ Menyimpan...' : '💾 Simpan Perubahan'}
             </button>
           </div>
         </motion.div>

@@ -4,18 +4,18 @@ import styles from './FeatureCards.module.css';
 const features = [
   {
     icon: '🤖',
-    title: 'AI Viral Engine',
-    description: 'Analyzes transcript and intonation to detect hook moments with the highest viral potential.',
+    title: 'Mesin Viral AI',
+    description: 'Analisis transkrip dan intonasi untuk mendeteksi momen hook dengan potensi viral tertinggi.',
   },
   {
     icon: '📐',
     title: 'Auto-Reframe 9:16',
-    description: 'Automatically crops horizontal video to vertical format while keeping the speaker centered.',
+    description: 'Otomatis memotong video horizontal ke format vertikal dengan tetap menjaga speaker di tengah.',
   },
   {
     icon: '💬',
-    title: 'Dynamic Auto-Caption',
-    description: 'Bold, colorful animated subtitles optimized for TikTok, Reels, and YouTube Shorts algorithms.',
+    title: 'Caption Dinamis Otomatis',
+    description: 'Subtitle animasi berwarna yang dioptimalkan untuk algoritma TikTok, Reels, dan YouTube Shorts.',
   },
 ];
 

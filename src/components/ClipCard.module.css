@@ -169,6 +169,23 @@
   color: var(--text-secondary);
 }
 
+/* Hashtags */
+.hashtagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hashtag {
+  font-size: 0.65rem;
+  color: var(--accent-secondary);
+  background: rgba(236, 72, 153, 0.08);
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
 /* Actions */
 .actions {
   display: flex;
@@ -212,4 +229,16 @@
   background: var(--accent-primary-light);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+}
+
+.copyBtn {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #10b981;
+}
+
+.copyBtn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
 }

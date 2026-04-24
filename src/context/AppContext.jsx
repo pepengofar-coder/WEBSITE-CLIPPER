@@ -239,14 +239,14 @@ export function AppProvider({ children }) {
   /**
    * Generate + store subtitles. Accepts the clip object directly.
    */
-  const generateSubtitlesForClip = useCallback(async (clip, targetLang = 'id') => {
+  const generateSubtitlesForClip = useCallback(async (clip, targetLang = 'id', sourceLang = 'en') => {
     if (!clip?.transcript) throw new Error('No transcript available for this clip.');
 
-    dispatch({ type: 'SET_TOAST', payload: { message: '⏳ Translating subtitles...', type: 'loading' } });
+    dispatch({ type: 'SET_TOAST', payload: { message: '⏳ Menerjemahkan subtitle...', type: 'loading' } });
 
     try {
       // 1. Translate the transcript
-      const translatedText = await translateText(clip.transcript, targetLang, 'en');
+      const translatedText = await translateText(clip.transcript, targetLang, sourceLang);
 
       // 2. Build SRT file
       const srt = buildSRT(translatedText, clip.startTime || 0);
@@ -262,14 +262,14 @@ export function AppProvider({ children }) {
         payload: { id: clip.id, subtitleSrt: srt, lang: targetLang },
       });
 
-      dispatch({ type: 'SET_TOAST', payload: { message: '✅ Subtitles generated successfully!', type: 'success' } });
+      dispatch({ type: 'SET_TOAST', payload: { message: '✅ Subtitle berhasil dibuat!', type: 'success' } });
 
       return srt;
     } catch (err) {
       console.error('Subtitle generation failed:', err);
       dispatch({
         type: 'SET_TOAST',
-        payload: { message: `❌ Translation failed: ${err.message}. Try again.`, type: 'error' },
+        payload: { message: `❌ Terjemahan gagal: ${err.message}. Coba lagi.`, type: 'error' },
       });
       throw err;
     }

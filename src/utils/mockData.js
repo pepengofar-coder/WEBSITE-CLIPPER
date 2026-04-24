@@ -1,20 +1,20 @@
-// Mock data for frontend demo
+// Data dan utilitas untuk ClipForge (Bahasa Indonesia)
 export const MOCK_CLIPS = [
   {
     id: 'clip-1',
-    title: 'AI Will Replace Everything',
+    title: 'AI Akan Menggantikan Segalanya',
     topic: 'Artificial Intelligence',
     viralScore: 95,
     duration: 42,
-    startTime: 723, // 12:03 in seconds
-    endTime: 765,   // 12:45
+    startTime: 723,
+    endTime: 765,
     captionStyle: 'bold-pop',
     thumbnail: null,
     transcript: "This is going to change everything. AI isn't just a tool anymore, it's becoming a collaborator. In five years, every creative process will have AI integrated...",
   },
   {
     id: 'clip-2',
-    title: 'Neuralink First Results',
+    title: 'Hasil Pertama Neuralink',
     topic: 'Technology',
     viralScore: 87,
     duration: 31,
@@ -26,7 +26,7 @@ export const MOCK_CLIPS = [
   },
   {
     id: 'clip-3',
-    title: 'Mars Colony Timeline',
+    title: 'Timeline Koloni Mars',
     topic: 'Space',
     viralScore: 72,
     duration: 55,
@@ -38,7 +38,7 @@ export const MOCK_CLIPS = [
   },
   {
     id: 'clip-4',
-    title: 'Why Social Media is Broken',
+    title: 'Kenapa Media Sosial Rusak',
     topic: 'Society',
     viralScore: 68,
     duration: 38,
@@ -50,7 +50,7 @@ export const MOCK_CLIPS = [
   },
   {
     id: 'clip-5',
-    title: 'The Future of Education',
+    title: 'Masa Depan Pendidikan',
     topic: 'Education',
     viralScore: 61,
     duration: 47,
@@ -66,44 +66,44 @@ export const MOCK_SOURCE = {
   title: 'Joe Rogan Experience #2103 — Elon Musk',
   platform: 'youtube',
   url: 'https://www.youtube.com/watch?v=example123',
-  totalDuration: 10800, // 3 hours
+  totalDuration: 10800,
 };
 
 export const PROCESSING_STEPS = [
-  { id: 1, label: 'Downloading audio', icon: '📥' },
-  { id: 2, label: 'Transcribing speech', icon: '🎙️' },
-  { id: 3, label: 'Detecting viral moments', icon: '🔍' },
-  { id: 4, label: 'Generating clips', icon: '✂️' },
+  { id: 1, label: 'Mengunduh audio', icon: '📥' },
+  { id: 2, label: 'Transkripsi suara', icon: '🎙️' },
+  { id: 3, label: 'Mendeteksi momen viral', icon: '🔍' },
+  { id: 4, label: 'Membuat klip', icon: '✂️' },
 ];
 
 export const VIRAL_QUOTES = [
-  "The best hooks happen in the first 3 seconds of a clip.",
-  "Short-form content gets 2.5x more engagement than long-form.",
-  "Clips with captions get 80% more views than those without.",
-  "The ideal viral clip length is between 15-45 seconds.",
-  "Emotional peaks drive 3x more shares than flat content.",
-  "Vertical video (9:16) gets 58% more engagement on mobile.",
+  "Hook terbaik terjadi di 3 detik pertama klip.",
+  "Konten pendek mendapat 2.5x lebih banyak interaksi.",
+  "Klip dengan caption mendapat 80% lebih banyak views.",
+  "Durasi klip viral ideal antara 15-45 detik.",
+  "Puncak emosional menghasilkan 3x lebih banyak share.",
+  "Video vertikal (9:16) mendapat 58% lebih banyak engagement.",
 ];
 
 export const CAPTION_STYLES = [
   {
     id: 'bold-pop',
     name: 'Bold Pop',
-    description: 'Bold, colorful text with pop-up animation',
+    description: 'Teks tebal berwarna dengan animasi pop-up',
     preview: 'Aa',
     color: '#ff6b35',
   },
   {
     id: 'neon-glow',
     name: 'Neon Glow',
-    description: 'Glowing neon-style captions',
+    description: 'Caption gaya neon bercahaya',
     preview: 'Aa',
     color: '#00ff88',
   },
   {
     id: 'minimal',
     name: 'Minimal',
-    description: 'Clean, white text with subtle shadow',
+    description: 'Teks putih bersih dengan bayangan halus',
     preview: 'Aa',
     color: '#ffffff',
   },
@@ -126,9 +126,9 @@ export function formatTimestamp(seconds) {
 }
 
 export function getViralLevel(score) {
-  if (score >= 80) return { emoji: '🔥', label: 'Fire', tier: 'fire' };
-  if (score >= 60) return { emoji: '⚡', label: 'Hot', tier: 'hot' };
-  return { emoji: '💡', label: 'Potential', tier: 'warm' };
+  if (score >= 80) return { emoji: '🔥', label: 'Viral', tier: 'fire' };
+  if (score >= 60) return { emoji: '⚡', label: 'Panas', tier: 'hot' };
+  return { emoji: '💡', label: 'Potensial', tier: 'warm' };
 }
 
 export function detectPlatform(url) {

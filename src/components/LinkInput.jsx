@@ -25,29 +25,27 @@ export default function LinkInput() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!url.trim()) {
-      setError('Please paste a video or podcast link');
+      setError('Silakan tempel link video atau podcast');
       return;
     }
     if (!url.startsWith('http')) {
-      setError('Please enter a valid URL');
+      setError('Masukkan URL yang valid');
       return;
     }
     setError('');
     setIsSubmitting(true);
 
-    // Set URL in state
     dispatch({
       type: 'SET_URL',
       payload: { url, platform: platform || 'generic' },
     });
 
-    // Create job in Supabase via context action
     const job = await actions.startProcessing(url, platform || 'generic');
 
     if (job) {
       navigate('/processing');
     } else {
-      setError('Failed to start processing. Please try again.');
+      setError('Gagal memulai proses. Silakan coba lagi.');
     }
     setIsSubmitting(false);
   };
@@ -73,7 +71,7 @@ export default function LinkInput() {
           type="url"
           value={url}
           onChange={handleChange}
-          placeholder="Paste YouTube, Spotify, or Podcast link..."
+          placeholder="Tempel link YouTube, Spotify, atau Podcast..."
           autoComplete="off"
           autoFocus
         />
@@ -83,7 +81,7 @@ export default function LinkInput() {
           className={styles.generateBtn}
           disabled={!url.trim() || isSubmitting}
         >
-          <span>{isSubmitting ? 'Starting...' : 'Generate Clips'}</span>
+          <span>{isSubmitting ? 'Memproses...' : 'Buat Klip'}</span>
           <span className={styles.btnIcon}>→</span>
         </button>
       </div>

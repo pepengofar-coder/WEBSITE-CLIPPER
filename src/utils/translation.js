@@ -1,6 +1,7 @@
 /**
  * Translation utility for ClipForge
  * Uses LibreTranslate (free/open-source) as primary, with a mock fallback.
+ * Supports Arabic as source language.
  */
 
 const LIBRE_TRANSLATE_ENDPOINTS = [
@@ -12,15 +13,25 @@ const LIBRE_TRANSLATE_ENDPOINTS = [
 export const SUPPORTED_LANGUAGES = [
   { code: 'id', name: 'Bahasa Indonesia' },
   { code: 'en', name: 'English' },
-  { code: 'ar', name: 'Arabic (العربية)' },
-  { code: 'ms', name: 'Malay (Bahasa Melayu)' },
-  { code: 'zh', name: 'Chinese (中文)' },
-  { code: 'es', name: 'Spanish (Español)' },
-  { code: 'fr', name: 'French (Français)' },
-  { code: 'de', name: 'German (Deutsch)' },
-  { code: 'pt', name: 'Portuguese (Português)' },
-  { code: 'ja', name: 'Japanese (日本語)' },
-  { code: 'ko', name: 'Korean (한국어)' },
+  { code: 'ar', name: 'العربية (Arab)' },
+  { code: 'ms', name: 'Bahasa Melayu' },
+  { code: 'zh', name: '中文 (Mandarin)' },
+  { code: 'es', name: 'Español (Spanyol)' },
+  { code: 'fr', name: 'Français (Prancis)' },
+  { code: 'de', name: 'Deutsch (Jerman)' },
+  { code: 'pt', name: 'Português (Portugis)' },
+  { code: 'ja', name: '日本語 (Jepang)' },
+  { code: 'ko', name: '한국어 (Korea)' },
+  { code: 'tr', name: 'Türkçe (Turki)' },
+  { code: 'ur', name: 'اردو (Urdu)' },
+  { code: 'hi', name: 'हिन्दी (Hindi)' },
+];
+
+export const SOURCE_LANGUAGES = [
+  { code: 'en', name: 'English (Inggris)' },
+  { code: 'ar', name: 'العربية (Arab)' },
+  { code: 'id', name: 'Bahasa Indonesia' },
+  { code: 'auto', name: '🔍 Deteksi Otomatis' },
 ];
 
 /**
@@ -31,6 +42,9 @@ export async function translateText(text, targetLang = 'id', sourceLang = 'en') 
   if (!text || text.trim() === '') return '';
   if (sourceLang === targetLang) return text;
 
+  // If auto-detect, try without specifying source
+  const sourceParam = sourceLang === 'auto' ? 'auto' : sourceLang;
+
   // Try each endpoint
   for (const endpoint of LIBRE_TRANSLATE_ENDPOINTS) {
     try {
@@ -39,7 +53,7 @@ export async function translateText(text, targetLang = 'id', sourceLang = 'en') 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           q: text,
-          source: sourceLang,
+          source: sourceParam,
           target: targetLang,
           format: 'text',
         }),
@@ -54,20 +68,19 @@ export async function translateText(text, targetLang = 'id', sourceLang = 'en') 
     }
   }
 
-  // Fallback: simple word-map for Indonesian (most common use-case)
-  return mockTranslate(text, targetLang);
+  // Fallback: simple word-map
+  return mockTranslate(text, targetLang, sourceLang);
 }
 
 /**
  * Convert a transcript string into an SRT-formatted subtitle file.
- * Splits long text into chunks of ~10 words, each shown for 3 seconds.
  */
 export function buildSRT(transcript, startOffsetSeconds = 0) {
   if (!transcript) return '';
 
   const words = transcript.trim().split(/\s+/);
-  const chunkSize = 8; // ~8 words per subtitle line
-  const lineDuration = 3; // seconds per line
+  const chunkSize = 8;
+  const lineDuration = 3;
   const chunks = [];
 
   for (let i = 0; i < words.length; i += chunkSize) {
@@ -109,34 +122,67 @@ const ID_WORD_MAP = {
   'control': 'mengendalikan', 'cursor': 'kursor', 'by': 'dengan',
   'thinking': 'berpikir', 'that': 'itu', 'not': 'bukan', 'science': 'sains',
   'fiction': 'fiksi', 'literally': 'secara harfiah', 'happening': 'terjadi',
-  'right': 'tepat', 'now': 'sekarang', 'we': 'kami', 'are': 'sedang',
+  'right': 'tepat', 'we': 'kami', 'are': 'sedang',
   'looking': 'melihat', 'at': 'pada', 'for': 'untuk', 'and': 'dan',
   'could': 'bisa', 'small': 'kecil', 'habitat': 'habitat',
-  'biggest': 'terbesar', 'challenge': 'tantangan', "isn't": 'bukan',
+  'biggest': 'terbesar', 'challenge': 'tantangan',
   'rocket': 'roket', 'keeping': 'menjaga', 'humans': 'manusia', 'alive': 'hidup',
   'algorithm': 'algoritma', "doesn't": 'tidak', 'care': 'peduli',
   'about': 'tentang', 'truth': 'kebenaran', 'engagement': 'keterlibatan',
   'what': 'apa', 'gets': 'mendapat', 'outrage': 'kemarahan', 'fear': 'ketakutan',
-  'controversy': "kontroversi", 'fundamental': 'mendasar', 'problem': 'masalah',
+  'controversy': 'kontroversi', 'fundamental': 'mendasar', 'problem': 'masalah',
   'sitting': 'duduk', 'classroom': 'kelas', 'hours': 'jam', 'industrial': 'industri',
   'age': 'era', 'concept': 'konsep', 'future': 'masa depan', 'personalized': 'personal',
   'tutors': 'tutor', 'adapt': 'beradaptasi', 'how': 'bagaimana', 'each': 'setiap',
   'student': 'siswa', 'learns': 'belajar', 'best': 'terbaik',
 };
 
-function mockTranslate(text, targetLang) {
-  if (targetLang !== 'id') {
-    // For other languages, return a note that translation service is unavailable
-    return `[${targetLang.toUpperCase()} translation] ${text}`;
+// Arabic → Indonesian common word map (for Islamic content)
+const AR_ID_WORD_MAP = {
+  'الله': 'Allah', 'بسم': 'dengan nama', 'الرحمن': 'Yang Maha Pengasih',
+  'الرحيم': 'Yang Maha Penyayang', 'الحمد': 'segala puji', 'لله': 'bagi Allah',
+  'رب': 'Tuhan', 'العالمين': 'semesta alam', 'إن': 'sesungguhnya',
+  'الذين': 'orang-orang yang', 'آمنوا': 'beriman', 'قال': 'berkata',
+  'النبي': 'Nabi', 'رسول': 'Rasul', 'محمد': 'Muhammad',
+  'صلى': 'shalawat', 'عليه': 'atasnya', 'وسلم': 'dan salam',
+  'القرآن': 'Al-Quran', 'سورة': 'surah', 'آية': 'ayat',
+  'صلاة': 'shalat', 'زكاة': 'zakat', 'صيام': 'puasa', 'حج': 'haji',
+  'إيمان': 'iman', 'إسلام': 'Islam', 'إحسان': 'ihsan',
+  'دعاء': 'doa', 'ذكر': 'dzikir', 'تلاوة': 'tilawah',
+  'علم': 'ilmu', 'عمل': 'amal', 'أخلاق': 'akhlak',
+  'حلال': 'halal', 'حرام': 'haram', 'سنة': 'sunnah',
+  'من': 'dari', 'في': 'di', 'على': 'atas', 'إلى': 'kepada',
+  'هو': 'dia', 'هي': 'dia (pr)', 'هذا': 'ini', 'ذلك': 'itu',
+  'كان': 'adalah', 'لا': 'tidak', 'ما': 'apa', 'كيف': 'bagaimana',
+};
+
+function mockTranslate(text, targetLang, sourceLang = 'en') {
+  // Arabic → Indonesian
+  if (sourceLang === 'ar' && targetLang === 'id') {
+    return text
+      .split(/\s+/)
+      .map(word => {
+        const clean = word.replace(/[.,!?،؟؛]/g, '');
+        const translated = AR_ID_WORD_MAP[clean];
+        return translated !== undefined ? translated : word;
+      })
+      .filter(w => w !== '')
+      .join(' ');
   }
 
-  return text
-    .split(/\s+/)
-    .map(word => {
-      const lower = word.toLowerCase().replace(/[.,!?]/g, '');
-      const translated = ID_WORD_MAP[lower];
-      return translated !== undefined ? translated : word;
-    })
-    .filter(w => w !== '')
-    .join(' ');
+  // English → Indonesian
+  if (targetLang === 'id') {
+    return text
+      .split(/\s+/)
+      .map(word => {
+        const lower = word.toLowerCase().replace(/[.,!?]/g, '');
+        const translated = ID_WORD_MAP[lower];
+        return translated !== undefined ? translated : word;
+      })
+      .filter(w => w !== '')
+      .join(' ');
+  }
+
+  // For other language combos, prefix with language tag
+  return `[${targetLang.toUpperCase()}] ${text}`;
 }

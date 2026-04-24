@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import ViralBadge from './ViralBadge';
 import VideoPreview from './VideoPreview';
 import { formatDuration } from '../utils/mockData';
+import { generateViralMeta, generateClipLink } from '../utils/viralMeta';
 import { useAppState, useAppDispatch } from '../context/AppContext';
 import styles from './ClipCard.module.css';
 
@@ -16,6 +17,9 @@ export default function ClipCard({ clip, index }) {
   const { currentUrl } = useAppState();
   const dispatch = useAppDispatch();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const viralMeta = generateViralMeta(clip);
 
   const handleEdit = (e) => {
     e.stopPropagation();
@@ -30,6 +34,25 @@ export default function ClipCard({ clip, index }) {
   const togglePlay = (e) => {
     e.stopPropagation();
     setIsPlaying(prev => !prev);
+  };
+
+  const handleCopyCaption = async (e) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(viralMeta.caption);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = viralMeta.caption;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -51,7 +74,7 @@ export default function ClipCard({ clip, index }) {
         <div className={styles.previewGradient}>
           <button
             className={styles.playBtn}
-            aria-label={isPlaying ? 'Pause preview' : 'Play preview'}
+            aria-label={isPlaying ? 'Jeda preview' : 'Putar preview'}
           >
             {isPlaying ? '⏸' : '▶'}
           </button>
@@ -77,10 +100,25 @@ export default function ClipCard({ clip, index }) {
           <span className={styles.topic}>{clip.topic}</span>
         </div>
         <h3 className={styles.cardTitle}>{clip.title}</h3>
+
+        {/* Hashtags */}
+        <div className={styles.hashtagRow}>
+          {viralMeta.hashtags.slice(0, 5).map((tag, i) => (
+            <span key={i} className={styles.hashtag}>{tag}</span>
+          ))}
+        </div>
+
         <div className={styles.cardMeta}>
           <span className={styles.duration}>⏱ {formatDuration(clip.duration)}</span>
         </div>
         <div className={styles.actions}>
+          <button
+            className={`${styles.actionBtn} ${styles.copyBtn}`}
+            onClick={handleCopyCaption}
+            id={`copy-caption-${clip.id}`}
+          >
+            {copied ? '✅ Tersalin!' : '📋 Salin Caption'}
+          </button>
           <button
             className={`${styles.actionBtn} ${styles.editBtn}`}
             onClick={handleEdit}
@@ -93,7 +131,7 @@ export default function ClipCard({ clip, index }) {
             onClick={handleDownload}
             id={`download-clip-${clip.id}`}
           >
-            ⬇ Export
+            ⬇ Ekspor
           </button>
         </div>
       </div>

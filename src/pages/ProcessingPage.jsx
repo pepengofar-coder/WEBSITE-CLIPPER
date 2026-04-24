@@ -15,14 +15,12 @@ export default function ProcessingPage() {
   const timerRef = useRef(null);
   const finishedRef = useRef(false);
 
-  // Redirect to home if no job is active
   useEffect(() => {
     if (!currentJobId) {
       navigate('/');
     }
   }, [currentJobId, navigate]);
 
-  // Simulate processing steps
   useEffect(() => {
     if (!currentJobId) return;
 
@@ -34,7 +32,6 @@ export default function ProcessingPage() {
         const next = prev + 1;
         if (next >= totalSteps) {
           clearInterval(timerRef.current);
-          // Finish processing — save clips to Supabase
           if (!finishedRef.current) {
             finishedRef.current = true;
             setTimeout(async () => {
@@ -51,7 +48,6 @@ export default function ProcessingPage() {
     return () => clearInterval(timerRef.current);
   }, [currentJobId, actions, navigate]);
 
-  // Progress bar animation
   useEffect(() => {
     const totalSteps = PROCESSING_STEPS.length;
     const targetProgress = ((currentStep + 1) / totalSteps) * 100;
@@ -67,7 +63,6 @@ export default function ProcessingPage() {
     return () => clearInterval(interval);
   }, [currentStep]);
 
-  // Rotate quotes
   useEffect(() => {
     const interval = setInterval(() => {
       setQuoteIndex(prev => (prev + 1) % VIRAL_QUOTES.length);
@@ -75,7 +70,6 @@ export default function ProcessingPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Generate waveform bars
   const waveBars = Array.from({ length: 40 }, (_, i) => (
     <div
       key={i}
@@ -97,13 +91,11 @@ export default function ProcessingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Title */}
         <h2 className={styles.title}>
           <span className={styles.brainIcon}>🧠</span>
-          Analyzing...
+          Menganalisis...
         </h2>
 
-        {/* Progress Bar */}
         <div className={styles.progressWrapper}>
           <div className={styles.progressBar}>
             <div
@@ -112,11 +104,10 @@ export default function ProcessingPage() {
             />
           </div>
           <span className={styles.stepLabel}>
-            Step {Math.min(currentStep + 1, PROCESSING_STEPS.length)} of {PROCESSING_STEPS.length}
+            Langkah {Math.min(currentStep + 1, PROCESSING_STEPS.length)} dari {PROCESSING_STEPS.length}
           </span>
         </div>
 
-        {/* Steps */}
         <div className={styles.stepsList}>
           {PROCESSING_STEPS.map((step, i) => {
             let status = 'pending';
@@ -140,7 +131,6 @@ export default function ProcessingPage() {
           })}
         </div>
 
-        {/* Quote */}
         <AnimatePresence mode="wait">
           <motion.div
             key={quoteIndex}
@@ -157,7 +147,6 @@ export default function ProcessingPage() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Waveform */}
         <div className={styles.waveform}>
           {waveBars}
         </div>
