@@ -66,42 +66,51 @@
   gap: var(--space-xl);
 }
 
-/* Preview */
+/* Preview container — holds the VideoPreview + controls */
 .previewContainer {
-  width: 180px;
-  aspect-ratio: 9 / 16;
+  position: relative;
+  width: 160px;
   margin: 0 auto;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--bg-primary);
   border: var(--border-card);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
 }
 
-.previewWave {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 24px;
+.previewPlayBtn {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.previewWave span {
-  width: 2px;
-  border-radius: var(--radius-full);
-  background: var(--accent-primary);
-  opacity: 0.5;
-  animation: waveform 1.5s ease-in-out infinite;
+.previewPlayBtn:hover {
+  background: rgba(124, 58, 237, 0.7);
 }
 
-.previewText {
-  font-size: 0.6rem;
-  color: var(--text-muted);
+.liveLabel {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 /* Slider Section */

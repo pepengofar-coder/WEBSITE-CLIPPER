@@ -141,6 +141,120 @@
   font-family: var(--font-heading);
 }
 
+.specGreen {
+  color: #10b981 !important;
+}
+
+.specMuted {
+  color: var(--text-muted) !important;
+  font-style: italic;
+}
+
+/* ── Subtitle Generator ── */
+.subtitleSection {
+  background: rgba(124, 58, 237, 0.06);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.subtitleHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subtitleTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.subtitleHint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.subtitleControls {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.langSelect {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: var(--border-card);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.83rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.langSelect:focus {
+  border-color: var(--accent-primary);
+}
+
+.subtitleBtn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-primary);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.subtitleBtn:hover:not(:disabled) {
+  background: var(--accent-primary-light);
+  transform: translateY(-1px);
+}
+
+.subtitleBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subtitleBtn.subtitleDone {
+  background: rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #10b981;
+}
+
+.srtPreview {
+  overflow: hidden;
+}
+
+.srtLabel {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.srtContent {
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
 /* Download Button */
 .downloadBtn {
   width: 100%;
