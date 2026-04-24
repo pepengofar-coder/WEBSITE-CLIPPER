@@ -12,9 +12,13 @@ const CAPTION_STYLE_CLASS = {
 };
 
 export default function ClipCard({ clip, index }) {
+  const { currentUrl } = useAppState();
   const dispatch = useAppDispatch();
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
+
+  const ytMatch = currentUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+  const ytId = ytMatch ? ytMatch[1] : null;
 
   const handleEdit = () => {
     dispatch({ type: 'OPEN_EDIT_MODAL', payload: clip });
@@ -25,6 +29,10 @@ export default function ClipCard({ clip, index }) {
   };
 
   const togglePlay = () => {
+    if (ytId) {
+      setIsPlaying(!isPlaying);
+      return;
+    }
     if (!videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
@@ -43,14 +51,25 @@ export default function ClipCard({ clip, index }) {
     >
       {/* 9:16 Preview */}
       <div className={styles.previewArea}>
-        <video 
-          ref={videoRef}
-          src="https://www.w3schools.com/html/mov_bbb.mp4" 
-          loop 
-          muted 
-          playsInline
-          style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
-        />
+        {ytId ? (
+          <div style={{ width: '300%', height: '100%', position: 'absolute', left: '-100%', pointerEvents: 'none' }}>
+            <iframe
+              src={`https://www.youtube.com/embed/${ytId}?autoplay=${isPlaying ? 1 : 0}&mute=1&loop=1&controls=0&playlist=${ytId}`}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              allow="autoplay; encrypted-media"
+              title="YouTube preview"
+            />
+          </div>
+        ) : (
+          <video 
+            ref={videoRef}
+            src="https://www.w3schools.com/html/mov_bbb.mp4" 
+            loop 
+            muted 
+            playsInline
+            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+          />
+        )}
         <div className={styles.previewGradient}>
           <button 
             className={styles.playBtn} 

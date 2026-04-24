@@ -51,6 +51,10 @@ export default function EditModal() {
   const minRange = Math.max(0, selectedClip.startTime - 30);
   const maxRange = selectedClip.endTime + 30;
 
+  const { currentUrl } = useAppState();
+  const ytMatch = currentUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+  const ytId = ytMatch ? ytMatch[1] : null;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -82,14 +86,25 @@ export default function EditModal() {
           <div className={styles.modalBody}>
             {/* Preview */}
             <div className={styles.previewContainer} style={{ position: 'relative', overflow: 'hidden' }}>
-              <video 
-                src="https://www.w3schools.com/html/mov_bbb.mp4" 
-                loop 
-                muted 
-                autoPlay
-                playsInline
-                style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
-              />
+              {ytId ? (
+                <div style={{ width: '300%', height: '100%', position: 'absolute', left: '-100%', pointerEvents: 'none' }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&controls=0&playlist=${ytId}`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    allow="autoplay; encrypted-media"
+                    title="YouTube preview"
+                  />
+                </div>
+              ) : (
+                <video 
+                  src="https://www.w3schools.com/html/mov_bbb.mp4" 
+                  loop 
+                  muted 
+                  autoPlay
+                  playsInline
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+                />
+              )}
               <div style={{ position: 'absolute', bottom: '10px', left: 0, right: 0, textAlign: 'center', zIndex: 2 }}>
                 <span className={styles.previewText} style={{ background: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: '4px' }}>Live Preview</span>
               </div>
