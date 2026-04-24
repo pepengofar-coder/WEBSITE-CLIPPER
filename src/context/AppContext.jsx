@@ -10,6 +10,7 @@ import {
   dbJobToApp,
 } from '../lib/supabase';
 import { MOCK_CLIPS, MOCK_SOURCE } from '../utils/mockData';
+import { translateText, buildSRT } from '../utils/translation';
 
 const AppContext = createContext(null);
 const AppDispatchContext = createContext(null);
@@ -41,8 +42,9 @@ const initialState = {
   isExportDrawerOpen: false,
   exportProgress: 0,
 
-  // Error
+  // Error / toast
   error: null,
+  toast: null, // { message, type }
 };
 
 function appReducer(state, action) {
@@ -59,6 +61,7 @@ function appReducer(state, action) {
         hasResults: false,
         clips: [],
         error: null,
+        toast: null,
       };
 
     case 'SET_JOB_ID':
@@ -128,6 +131,32 @@ function appReducer(state, action) {
         exportProgress: 0,
       };
 
+    // ✅ Save generated subtitle to clip
+    case 'SAVE_SUBTITLE':
+      return {
+        ...state,
+        clips: state.clips.map(c =>
+          c.id === action.payload.id
+            ? { ...c, subtitle_srt: action.payload.subtitle_srt, subtitleLang: action.payload.lang }
+            : c
+        ),
+        // Also update selectedClip / exportingClip if they match
+        selectedClip:
+          state.selectedClip?.id === action.payload.id
+            ? { ...state.selectedClip, subtitle_srt: action.payload.subtitle_srt }
+            : state.selectedClip,
+        exportingClip:
+          state.exportingClip?.id === action.payload.id
+            ? { ...state.exportingClip, subtitle_srt: action.payload.subtitle_srt }
+            : state.exportingClip,
+      };
+
+    case 'SET_TOAST':
+      return { ...state, toast: action.payload };
+
+    case 'CLEAR_TOAST':
+      return { ...state, toast: null };
+
     case 'SET_ERROR':
       return { ...state, error: action.payload, isProcessing: false };
 
@@ -142,17 +171,13 @@ function appReducer(state, action) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Supabase-integrated actions
+  // ── Supabase-integrated actions ──────────────────────────────────────────
+
   const startProcessing = useCallback(async (url, platform) => {
     dispatch({ type: 'START_PROCESSING' });
-
     try {
-      // 1. Create job in Supabase
       const job = await createJob(url, platform);
       dispatch({ type: 'SET_JOB_ID', payload: job.id });
-
-      // 2. Simulate processing (in a real app, the backend does this)
-      // The ProcessingPage handles the animation; we just need to save results at the end
       return job;
     } catch (err) {
       console.error('Failed to create job:', err);
@@ -163,32 +188,19 @@ export function AppProvider({ children }) {
 
   const finishProcessing = useCallback(async (jobId) => {
     try {
-      // 1. Save mock clips to Supabase
       const savedClips = await saveClips(jobId, MOCK_CLIPS);
       const appClips = savedClips.map(dbClipToApp);
-
-      // 2. Update job status
       await updateJobStatus(jobId, 'completed', MOCK_SOURCE.title, appClips.length);
-
-      // 3. Update local state
       dispatch({
         type: 'FINISH_PROCESSING',
-        payload: {
-          clips: appClips,
-          source: { ...MOCK_SOURCE },
-        },
+        payload: { clips: appClips, source: { ...MOCK_SOURCE } },
       });
-
       return appClips;
     } catch (err) {
       console.error('Failed to finish processing:', err);
-      // Fall back to local mock data
       dispatch({
         type: 'FINISH_PROCESSING',
-        payload: {
-          clips: MOCK_CLIPS,
-          source: MOCK_SOURCE,
-        },
+        payload: { clips: MOCK_CLIPS, source: MOCK_SOURCE },
       });
       return MOCK_CLIPS;
     }
@@ -196,17 +208,11 @@ export function AppProvider({ children }) {
 
   const saveClipEdit = useCallback(async (clipId, updates) => {
     try {
-      // Save to Supabase
       await updateClipApi(clipId, updates);
     } catch (err) {
       console.error('Failed to save clip edit:', err);
-      // Continue anyway — state is updated locally
     }
-
-    dispatch({
-      type: 'SAVE_CLIP_EDIT',
-      payload: { id: clipId, ...updates },
-    });
+    dispatch({ type: 'SAVE_CLIP_EDIT', payload: { id: clipId, ...updates } });
   }, []);
 
   const exportClip = useCallback(async (clipId) => {
@@ -217,11 +223,70 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  /**
+   * Generate + store subtitles for a clip.
+   * @param {string} clipId
+   * @param {string} targetLang - ISO language code (e.g. 'id', 'en')
+   * @param {string} sourceLang - source language code (default: 'en')
+   */
+  const generateSubtitles = useCallback(async (clipId, targetLang = 'id', sourceLang = 'en') => {
+    // Find clip in current state (snapshot via closure would be stale; use dispatch to read)
+    // We'll use a ref-trick: pass the clip directly from the caller.
+    // This function receives the clip object from ExportDrawer.
+    throw new Error('Use generateSubtitlesForClip(clip, targetLang) instead.');
+  }, []);
+
+  /**
+   * Generate + store subtitles. Accepts the clip object directly.
+   */
+  const generateSubtitlesForClip = useCallback(async (clip, targetLang = 'id') => {
+    if (!clip?.transcript) throw new Error('No transcript available for this clip.');
+
+    dispatch({ type: 'SET_TOAST', payload: { message: '⏳ Translating subtitles...', type: 'loading' } });
+
+    try {
+      // 1. Translate the transcript
+      const translatedText = await translateText(clip.transcript, targetLang, 'en');
+
+      // 2. Build SRT file
+      const srt = buildSRT(translatedText, clip.startTime || 0);
+
+      // 3. Persist to Supabase (best-effort — don't block on failure)
+      try {
+        await updateClipApi(clip.id, { subtitle_srt: srt });
+      } catch (_) {}
+
+      // 4. Update local state
+      dispatch({
+        type: 'SAVE_SUBTITLE',
+        payload: { id: clip.id, subtitle_srt: srt, lang: targetLang },
+      });
+
+      dispatch({ type: 'SET_TOAST', payload: { message: '✅ Subtitles generated successfully!', type: 'success' } });
+
+      return srt;
+    } catch (err) {
+      console.error('Subtitle generation failed:', err);
+      dispatch({
+        type: 'SET_TOAST',
+        payload: { message: `❌ Translation failed: ${err.message}. Try again.`, type: 'error' },
+      });
+      throw err;
+    }
+  }, []);
+
+  const clearToast = useCallback(() => {
+    dispatch({ type: 'CLEAR_TOAST' });
+  }, []);
+
   const actions = {
     startProcessing,
     finishProcessing,
     saveClipEdit,
     exportClip,
+    generateSubtitles,
+    generateSubtitlesForClip,
+    clearToast,
   };
 
   return (

@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import ViralBadge from './ViralBadge';
+import VideoPreview from './VideoPreview';
 import { formatDuration } from '../utils/mockData';
-import { useAppDispatch } from '../context/AppContext';
+import { useAppState, useAppDispatch } from '../context/AppContext';
 import styles from './ClipCard.module.css';
 
 const CAPTION_STYLE_CLASS = {
@@ -15,10 +16,6 @@ export default function ClipCard({ clip, index }) {
   const { currentUrl } = useAppState();
   const dispatch = useAppDispatch();
   const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = useRef(null);
-
-  const ytMatch = currentUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
-  const ytId = ytMatch ? ytMatch[1] : null;
 
   const handleEdit = () => {
     dispatch({ type: 'OPEN_EDIT_MODAL', payload: clip });
@@ -28,19 +25,7 @@ export default function ClipCard({ clip, index }) {
     dispatch({ type: 'OPEN_EXPORT', payload: clip });
   };
 
-  const togglePlay = () => {
-    if (ytId) {
-      setIsPlaying(!isPlaying);
-      return;
-    }
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
+  const togglePlay = () => setIsPlaying(prev => !prev);
 
   return (
     <motion.div
@@ -50,39 +35,34 @@ export default function ClipCard({ clip, index }) {
       transition={{ delay: index * 0.1, duration: 0.4 }}
     >
       {/* 9:16 Preview */}
-      <div className={styles.previewArea}>
-        {ytId ? (
-          <div style={{ width: '300%', height: '100%', position: 'absolute', left: '-100%', pointerEvents: 'none' }}>
-            <iframe
-              src={`https://www.youtube.com/embed/${ytId}?autoplay=${isPlaying ? 1 : 0}&mute=1&loop=1&controls=0&playlist=${ytId}`}
-              style={{ width: '100%', height: '100%', border: 'none' }}
-              allow="autoplay; encrypted-media"
-              title="YouTube preview"
-            />
-          </div>
-        ) : (
-          <video 
-            ref={videoRef}
-            src="https://www.w3schools.com/html/mov_bbb.mp4" 
-            loop 
-            muted 
-            playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
-          />
-        )}
+      <div className={styles.previewArea} onClick={togglePlay}>
+        <VideoPreview
+          url={currentUrl}
+          isPlaying={isPlaying}
+          startTime={clip.startTime}
+        />
+
+        {/* Gradient overlay + play button */}
         <div className={styles.previewGradient}>
-          <button 
-            className={styles.playBtn} 
-            onClick={togglePlay} 
-            aria-label={isPlaying ? "Pause preview" : "Play preview"}
+          <button
+            className={styles.playBtn}
+            aria-label={isPlaying ? 'Pause preview' : 'Play preview'}
           >
-            {isPlaying ? '⏸️' : '▶'}
+            {isPlaying ? '⏸' : '▶'}
           </button>
         </div>
-        {/* Caption preview */}
+
+        {/* Caption overlay */}
         <div className={`${styles.captionPreview} ${CAPTION_STYLE_CLASS[clip.captionStyle] || styles.boldPop}`}>
-          {clip.transcript?.substring(0, 40)}...
+          {clip.transcript?.substring(0, 40)}…
         </div>
+
+        {/* Subtitle indicator */}
+        {clip.subtitle_srt && (
+          <div className={styles.subtitleBadge}>
+            🗒️ {clip.subtitleLang?.toUpperCase() || 'SUB'}
+          </div>
+        )}
       </div>
 
       {/* Card Info */}
@@ -108,7 +88,7 @@ export default function ClipCard({ clip, index }) {
             onClick={handleDownload}
             id={`download-clip-${clip.id}`}
           >
-            ⬇ Download
+            ⬇ Export
           </button>
         </div>
       </div>

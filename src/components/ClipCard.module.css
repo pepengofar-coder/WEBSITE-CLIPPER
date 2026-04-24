@@ -20,9 +20,12 @@
   position: relative;
   width: 100%;
   aspect-ratio: 9 / 16;
-  background: var(--bg-primary);
+  background: #000;
   overflow: hidden;
   cursor: pointer;
+  /* Ensure child VideoPreview fills the area */
+  display: flex;
+  flex-direction: column;
 }
 
 .previewGradient {
@@ -39,49 +42,20 @@
   );
 }
 
-/* Placeholder visual for 9:16 preview */
-.previewVisual {
+/* Subtitle language badge */
+.subtitleBadge {
   position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: linear-gradient(
-    160deg,
-    rgba(124, 58, 237, 0.08) 0%,
-    rgba(59, 130, 246, 0.04) 50%,
-    rgba(16, 185, 129, 0.06) 100%
-  );
-}
-
-.previewWave {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 32px;
-}
-
-.previewWave span {
-  width: 3px;
-  border-radius: var(--radius-full);
-  background: var(--accent-primary);
-  opacity: 0.4;
-  animation: waveform 1.5s ease-in-out infinite;
-  animation-play-state: paused;
-}
-
-.previewWave span.waveAnim {
-  animation-play-state: running;
-}
-
-.previewLabel {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  background: rgba(16, 185, 129, 0.85);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(4px);
 }
 
 .playBtn {
