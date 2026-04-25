@@ -97,12 +97,15 @@ function buildDrawtextFilter(cues, offsetSec = 0) {
     const safeText = cue.text
       .replace(/\\/g, '\\\\')
       .replace(/:/g, '\\:')
-      .replace(/'/g, "'\\''")
+      .replace(/'/g, "'\\'")
       .replace(/%/g, '%%');
 
     return `drawtext=text='${safeText}':fontsize=28:fontcolor=white:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-80:enable='between(t,${start.toFixed(3)},${end.toFixed(3)})'`;
   }).join(',');
 }
+
+/** Minimum valid MP4 size in bytes — anything smaller is considered a failed export */
+const MIN_VALID_MP4_SIZE = 10 * 1024; // 10 KB
 
 /**
  * Process a video file with burned-in captions.
@@ -120,9 +123,14 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
 
   // ── Phase 0  (0–15 %): Load FFmpeg ──
   report(0);
+  console.log('[ClipForge Export] Memulai proses export MP4...');
+  console.log('[ClipForge Export] Input file:', videoFile.name || 'blob', '| Size:', (videoFile.size / 1024 / 1024).toFixed(2), 'MB');
+  console.log('[ClipForge Export] Trim:', startTime, '->', endTime, 'detik');
+
   const logs = [];
   const ffmpeg = await loadFFmpeg((msg) => logs.push(msg));
   report(15);
+  console.log('[ClipForge Export] FFmpeg berhasil dimuat');
 
   // ── Phase 1  (15–25 %): Write input files ──
   const { fetchFile } = await import('@ffmpeg/util');
@@ -134,16 +142,30 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
   } catch (err) {
     throw new Error(`Gagal membaca file video: ${err.message}`);
   }
+
+  console.log('[ClipForge Export] Video data loaded, size:', videoData.byteLength, 'bytes');
+
+  if (!videoData || videoData.byteLength < 1000) {
+    throw new Error('File video terlalu kecil atau kosong. Pastikan file video valid.');
+  }
+
   await ffmpeg.writeFile('input.mp4', videoData);
   report(25);
+  console.log('[ClipForge Export] File ditulis ke virtual filesystem');
 
   // ── Phase 2  (25–30 %): Build command ──
-  const args = ['-i', 'input.mp4'];
+  // IMPORTANT: Place -ss BEFORE -i for fast seeking (input-level seeking)
+  // This avoids decoding the entire file up to the seek point
+  const args = [];
 
-  // Trim
+  // Fast seek: -ss before -i does input-level seeking
   if (startTime > 0) {
     args.push('-ss', String(startTime));
   }
+
+  args.push('-i', 'input.mp4');
+
+  // Duration limit (use -t after -i)
   if (endTime > startTime) {
     args.push('-t', String(endTime - startTime));
   }
@@ -180,9 +202,9 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
   );
 
   report(30);
+  console.log('[ClipForge Export] FFmpeg command:', ['ffmpeg', ...args].join(' '));
 
   // ── Phase 3  (30–90 %): Execute FFmpeg ──
-  // Set up progress listener (one-time, remove after)
   const progressHandler = ({ progress }) => {
     const pct = 30 + Math.min(60, progress * 60);
     report(pct);
@@ -193,27 +215,46 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
     await ffmpeg.exec(args);
   } catch (err) {
     ffmpeg.off('progress', progressHandler);
-    // Dump last 10 log lines for debugging
     const tail = logs.slice(-10).join('\n');
+    console.error('[ClipForge Export] FFmpeg exec gagal:', err);
+    console.error('[ClipForge Export] Log terakhir:\n', tail);
     throw new Error(`FFmpeg gagal: ${err.message}\n\nLog:\n${tail}`);
   }
 
   ffmpeg.off('progress', progressHandler);
   report(90);
+  console.log('[ClipForge Export] FFmpeg exec selesai');
 
   // ── Phase 4  (90–98 %): Read output ──
   let outputData;
   try {
     outputData = await ffmpeg.readFile('output.mp4');
-  } catch {
+  } catch (readErr) {
     const tail = logs.slice(-10).join('\n');
+    console.error('[ClipForge Export] Gagal membaca output.mp4:', readErr);
+    console.error('[ClipForge Export] Log terakhir:\n', tail);
     throw new Error(`Output MP4 tidak ditemukan. FFmpeg mungkin gagal.\n\nLog:\n${tail}`);
   }
   report(98);
 
-  // Validate output is non-empty
-  if (!outputData || outputData.length === 0) {
+  // ── Validate output ──
+  const outputSize = outputData ? outputData.byteLength || outputData.length || 0 : 0;
+  console.log('[ClipForge Export] Output size:', outputSize, 'bytes', `(${(outputSize / 1024).toFixed(1)} KB)`);
+
+  if (!outputData || outputSize === 0) {
+    const tail = logs.slice(-10).join('\n');
+    console.error('[ClipForge Export] Output kosong! Log:\n', tail);
     throw new Error('Output MP4 kosong — FFmpeg tidak menghasilkan file.');
+  }
+
+  if (outputSize < MIN_VALID_MP4_SIZE) {
+    const tail = logs.slice(-10).join('\n');
+    console.error(`[ClipForge Export] Output terlalu kecil (${outputSize} bytes). Log:\n`, tail);
+    throw new Error(
+      `Output MP4 terlalu kecil (${(outputSize / 1024).toFixed(1)} KB). ` +
+      `File video minimal harus ${(MIN_VALID_MP4_SIZE / 1024).toFixed(0)} KB. ` +
+      `Kemungkinan penyebab: video sumber terlalu pendek, timestamp di luar durasi video, atau format tidak didukung.`
+    );
   }
 
   // ── Phase 5  (98–100 %): Cleanup ──
@@ -222,32 +263,53 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
 
   report(100);
 
-  // Convert to standard ArrayBuffer (handles SharedArrayBuffer edge case)
-  const buffer = outputData instanceof Uint8Array
-    ? outputData.buffer.slice(outputData.byteOffset, outputData.byteOffset + outputData.byteLength)
-    : outputData.buffer;
+  // Convert to a safe Uint8Array copy to avoid SharedArrayBuffer issues.
+  // Some browsers return a Uint8Array backed by SharedArrayBuffer which Blob rejects.
+  const safeData = new Uint8Array(outputData);
+  const blob = new Blob([safeData], { type: 'video/mp4' });
 
-  return new Blob([buffer], { type: 'video/mp4' });
+  console.log('[ClipForge Export] ✅ Blob created successfully, size:', blob.size, 'bytes', `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
+
+  return blob;
 }
 
 /**
  * Download a blob as a file to the user's device.
  * Uses a temporary <a> element with download attribute.
+ *
+ * @param {Blob} blob - The blob to download
+ * @param {string} filename - The filename for the download (default: clipforge-output.mp4)
  */
 export function downloadBlob(blob, filename = 'clipforge-output.mp4') {
+  // Sanitize filename — remove characters that could cause issues
+  const safeName = filename
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_') // Remove illegal filename chars
+    .replace(/_+/g, '_')                     // Collapse multiple underscores
+    .trim() || 'clipforge-output.mp4';        // Fallback if empty after sanitization
+
+  console.log('[ClipForge Download] Triggering download:', safeName, '| Size:', blob.size, 'bytes');
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename;
+  a.download = safeName;
   a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
 
-  // Cleanup after a short delay so the download can start
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 10000);
+  // Some browsers require the element to be in the DOM
+  document.body.appendChild(a);
+
+  // Use a microtask to ensure the element is in the DOM before clicking
+  requestAnimationFrame(() => {
+    a.click();
+
+    // Cleanup after a short delay so the download can start
+    setTimeout(() => {
+      if (a.parentNode) {
+        document.body.removeChild(a);
+      }
+      URL.revokeObjectURL(url);
+    }, 15000);
+  });
 }
 
 /**

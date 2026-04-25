@@ -140,6 +140,10 @@ export default function ExportDrawer() {
       100: '✅ Selesai!',
     };
 
+    console.log('[ExportDrawer] Starting export for clip:', exportingClip.title);
+    console.log('[ExportDrawer] Upload file:', uploadedFile.name, '| Size:', (uploadedFile.size / 1024 / 1024).toFixed(2), 'MB');
+    console.log('[ExportDrawer] Clip range:', exportingClip.startTime, '->', exportingClip.endTime);
+
     try {
       const srt = exportingClip.subtitleSrt || '';
       const mp4Blob = await processVideoWithCaptions(
@@ -156,21 +160,32 @@ export default function ExportDrawer() {
         }
       );
 
-      // Validate the blob
-      if (!mp4Blob || mp4Blob.size < 1000) {
-        throw new Error('Output MP4 terlalu kecil — kemungkinan encoding gagal.');
+      // Validate the blob — must be at least 10KB for a valid MP4
+      const MIN_SIZE = 10 * 1024; // 10 KB
+      console.log('[ExportDrawer] MP4 blob size:', mp4Blob?.size, 'bytes');
+
+      if (!mp4Blob || mp4Blob.size < MIN_SIZE) {
+        throw new Error(
+          `Output MP4 terlalu kecil (${mp4Blob ? (mp4Blob.size / 1024).toFixed(1) + ' KB' : '0 bytes'}). ` +
+          `Minimum ${(MIN_SIZE / 1024).toFixed(0)} KB. Pastikan file video valid dan tidak corrupt.`
+        );
       }
 
-      const safeName = (exportingClip.title || 'clipforge-output')
-        .replace(/[^a-z0-9]/gi, '_')
+      // Build a clean, descriptive filename
+      const safeName = 'clipforge-' + (exportingClip.title || 'output')
+        .replace(/[^a-z0-9\s]/gi, '')
+        .replace(/\s+/g, '-')
         .toLowerCase()
         .substring(0, 40);
-      downloadBlob(mp4Blob, `${safeName}_clipforge.mp4`);
+      const filename = `${safeName}.mp4`;
+
+      console.log('[ExportDrawer] ✅ Download triggered:', filename, '| Size:', (mp4Blob.size / 1024 / 1024).toFixed(2), 'MB');
+      downloadBlob(mp4Blob, filename);
 
       await actions.exportClip(exportingClip.id);
       dispatch({ type: 'SET_TOAST', payload: { message: '✅ Video MP4 berhasil diunduh!', type: 'success' } });
     } catch (err) {
-      console.error('Video processing failed:', err);
+      console.error('[ExportDrawer] ❌ Video processing failed:', err);
       setExportError(err.message || 'Terjadi kesalahan saat memproses video.');
       dispatch({ type: 'SET_TOAST', payload: { message: `❌ Export gagal: ${err.message}`, type: 'error' } });
     } finally {
