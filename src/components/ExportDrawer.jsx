@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
 import { useAppState, useAppDispatch } from '../context/AppContext';
 import { CAPTION_STYLES } from '../utils/mockData';
 import { SUPPORTED_LANGUAGES, SOURCE_LANGUAGES } from '../utils/translation';
 import { generateViralMeta, generateClipLink } from '../utils/viralMeta';
+import { processVideoWithCaptions, downloadBlob, isFFmpegSupported } from '../utils/videoProcessor';
 import Toast from './Toast';
 import styles from './ExportDrawer.module.css';
 
@@ -12,13 +13,22 @@ export default function ExportDrawer() {
   const { exportingClip, currentUrl, actions, toast } = useAppState();
   const dispatch = useAppDispatch();
 
-  const [progress, setProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const [isGeneratingSubs, setIsGeneratingSubs] = useState(false);
   const [selectedLang, setSelectedLang] = useState('id');
   const [sourceLang, setSourceLang] = useState('en');
   const [subtitleReady, setSubtitleReady] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
+
+  // Video upload & processing
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const fileInputRef = useRef(null);
+
+  // Simulated render progress
+  const [renderProgress, setRenderProgress] = useState(0);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -30,10 +40,11 @@ export default function ExportDrawer() {
     else setSubtitleReady(false);
   }, [exportingClip]);
 
+  // Simulate render progress
   useEffect(() => {
     if (!exportingClip) return;
     const interval = setInterval(() => {
-      setProgress(prev => {
+      setRenderProgress(prev => {
         if (prev >= 100) { clearInterval(interval); setIsReady(true); return 100; }
         return Math.min(prev + (prev < 80 ? 2 : 1), 100);
       });
@@ -54,59 +65,95 @@ export default function ExportDrawer() {
     try {
       await actions.generateSubtitlesForClip(exportingClip, selectedLang, sourceLang);
       setSubtitleReady(true);
-    } catch {
-      // Toast error already dispatched
-    } finally {
+    } catch {} finally {
       setIsGeneratingSubs(false);
     }
   };
 
   const handleCopyCaption = async () => {
-    try {
-      await navigator.clipboard.writeText(viralMeta.caption);
-      setCaptionCopied(true);
-      setTimeout(() => setCaptionCopied(false), 2000);
-    } catch {
+    try { await navigator.clipboard.writeText(viralMeta.caption); }
+    catch {
       const ta = document.createElement('textarea');
       ta.value = viralMeta.caption;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      setCaptionCopied(true);
-      setTimeout(() => setCaptionCopied(false), 2000);
     }
+    setCaptionCopied(true);
+    setTimeout(() => setCaptionCopied(false), 2000);
   };
 
   const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(clipLink);
-      dispatch({ type: 'SET_TOAST', payload: { message: '✅ Link klip tersalin!', type: 'success' } });
-    } catch {}
+    try { await navigator.clipboard.writeText(clipLink); }
+    catch {}
+    dispatch({ type: 'SET_TOAST', payload: { message: '✅ Link klip tersalin!', type: 'success' } });
   };
 
-  const handleDownload = async () => {
+  // ── File upload handlers ──
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('video/')) {
+      setUploadedFile(file);
+    }
+  };
+
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('video/')) {
+      setUploadedFile(file);
+    }
+  };
+
+  // ── Process & Download MP4 ──
+  const handleProcessVideo = async () => {
+    if (!uploadedFile) return;
+    setIsProcessingVideo(true);
+    setVideoProgress(0);
+
+    try {
+      const srt = exportingClip.subtitleSrt || '';
+      const mp4Blob = await processVideoWithCaptions(
+        uploadedFile,
+        srt,
+        exportingClip.startTime || 0,
+        exportingClip.endTime || 0,
+        (progress) => setVideoProgress(progress)
+      );
+
+      const safeName = exportingClip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      downloadBlob(mp4Blob, `${safeName}_clipforge.mp4`);
+
+      await actions.exportClip(exportingClip.id);
+      dispatch({ type: 'SET_TOAST', payload: { message: '✅ Video MP4 berhasil diunduh!', type: 'success' } });
+    } catch (err) {
+      console.error('Video processing failed:', err);
+      dispatch({ type: 'SET_TOAST', payload: { message: `❌ Gagal memproses video: ${err.message}`, type: 'error' } });
+    } finally {
+      setIsProcessingVideo(false);
+    }
+  };
+
+  // ── Download metadata package (without video) ──
+  const handleDownloadMeta = async () => {
     await actions.exportClip(exportingClip.id);
 
     const safeName = exportingClip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const zip = new JSZip();
 
-    // SRT subtitle if available
-    const srt = exportingClip.subtitleSrt;
-    if (srt) {
-      zip.file(`${safeName}_subtitles.srt`, srt);
+    if (exportingClip.subtitleSrt) {
+      zip.file(`${safeName}_subtitles.srt`, exportingClip.subtitleSrt);
     }
-
-    // Viral caption (ready to paste)
     zip.file(`${safeName}_caption.txt`, viralMeta.caption);
-
-    // Clip metadata JSON
-    const meta = {
+    zip.file(`${safeName}_info.json`, JSON.stringify({
       judul: exportingClip.title,
       topik: exportingClip.topic,
       skorViral: exportingClip.viralScore,
       durasi: `${exportingClip.duration} detik`,
-      resolusi: '2160x3840 (4K 9:16)',
       format: 'MP4 / H.264',
       gayaCaption: exportingClip.captionStyle,
       transkrip: exportingClip.transcript,
@@ -116,19 +163,10 @@ export default function ExportDrawer() {
       hashtag: viralMeta.hashtagString,
       captionLengkap: viralMeta.caption,
       dibuatOleh: 'ClipForge AI',
-    };
-    zip.file(`${safeName}_info.json`, JSON.stringify(meta, null, 2));
+    }, null, 2));
 
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(zipBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${safeName}_clipforge.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
+    downloadBlob(zipBlob, `${safeName}_clipforge.zip`);
     handleClose();
   };
 
@@ -166,159 +204,179 @@ export default function ExportDrawer() {
               <h3 className={styles.drawerTitle}>
                 📥 Ekspor — "{exportingClip.title}"
               </h3>
-              <button className={styles.closeBtn} onClick={handleClose} aria-label="Tutup">
-                ✕
-              </button>
+              <button className={styles.closeBtn} onClick={handleClose} aria-label="Tutup">✕</button>
             </div>
 
-            {/* Progress */}
-            <div className={styles.progressSection}>
-              <div className={styles.progressLabel}>
-                <span>{isReady ? '✅ Siap diunduh!' : '⚙️ Menyiapkan render 4K...'}</span>
-                <span className={styles.progressPercent}>{progress}%</span>
-              </div>
-              <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-              </div>
-            </div>
+            {/* Scrollable body */}
+            <div className={styles.drawerBody}>
 
-            {/* Specs */}
-            <div className={styles.specs}>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Resolusi</span>
-                <span className={styles.specValue}>2160 × 3840 (4K 9:16)</span>
+              {/* Specs */}
+              <div className={styles.specs}>
+                <div className={styles.specRow}>
+                  <span className={styles.specLabel}>Format</span>
+                  <span className={styles.specValue}>MP4 / H.264</span>
+                </div>
+                <div className={styles.specRow}>
+                  <span className={styles.specLabel}>Caption</span>
+                  <span className={styles.specValue}>{captionStyleName}</span>
+                </div>
+                <div className={styles.specRow}>
+                  <span className={styles.specLabel}>Durasi</span>
+                  <span className={styles.specValue}>{exportingClip.duration} detik</span>
+                </div>
+                <div className={styles.specRow}>
+                  <span className={styles.specLabel}>Subtitle</span>
+                  <span className={`${styles.specValue} ${subtitleReady ? styles.specGreen : styles.specMuted}`}>
+                    {subtitleReady ? `✅ ${exportingClip.subtitleLang?.toUpperCase() || 'SELESAI'}` : 'Belum dibuat'}
+                  </span>
+                </div>
               </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Format</span>
-                <span className={styles.specValue}>MP4 / H.264</span>
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Caption</span>
-                <span className={styles.specValue}>{captionStyleName}</span>
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Durasi</span>
-                <span className={styles.specValue}>{exportingClip.duration} detik</span>
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Subtitle</span>
-                <span className={`${styles.specValue} ${subtitleReady ? styles.specGreen : styles.specMuted}`}>
-                  {subtitleReady ? `✅ ${exportingClip.subtitleLang?.toUpperCase() || 'SELESAI'}` : 'Belum dibuat'}
-                </span>
-              </div>
-            </div>
 
-            {/* ── Caption Siap Posting ── */}
-            <div className={styles.subtitleSection}>
-              <div className={styles.subtitleHeader}>
-                <span className={styles.subtitleTitle}>📝 Caption Siap Posting (FYP)</span>
-                <span className={styles.subtitleHint}>Judul, deskripsi & hashtag siap copas</span>
-              </div>
-              <div className={styles.srtPreview} style={{ opacity: 1, height: 'auto', marginTop: '8px' }}>
-                <pre className={styles.srtContent} style={{ whiteSpace: 'pre-wrap', fontSize: '0.82rem' }}>
-                  {viralMeta.caption}
-                </pre>
-              </div>
-              <div className={styles.subtitleControls} style={{ marginTop: '8px' }}>
-                <button
-                  className={`${styles.subtitleBtn} ${captionCopied ? styles.subtitleDone : ''}`}
-                  onClick={handleCopyCaption}
-                  id="copy-caption-btn"
-                >
-                  {captionCopied ? '✅ Tersalin!' : '📋 Salin Caption'}
-                </button>
-                {clipLink && (
+              {/* ── Caption Siap Posting ── */}
+              <div className={styles.subtitleSection}>
+                <div className={styles.subtitleHeader}>
+                  <span className={styles.subtitleTitle}>📝 Caption Siap Posting (FYP)</span>
+                  <span className={styles.subtitleHint}>Judul, deskripsi & hashtag siap copas</span>
+                </div>
+                <div className={styles.srtPreview} style={{ opacity: 1, height: 'auto', marginTop: '8px' }}>
+                  <pre className={styles.srtContent} style={{ whiteSpace: 'pre-wrap', fontSize: '0.82rem' }}>
+                    {viralMeta.caption}
+                  </pre>
+                </div>
+                <div className={styles.subtitleControls} style={{ marginTop: '8px' }}>
                   <button
-                    className={styles.subtitleBtn}
-                    onClick={handleCopyLink}
-                    id="copy-link-btn"
+                    className={`${styles.subtitleBtn} ${captionCopied ? styles.subtitleDone : ''}`}
+                    onClick={handleCopyCaption}
+                    id="copy-caption-btn"
                   >
-                    🔗 Salin Link Klip
+                    {captionCopied ? '✅ Tersalin!' : '📋 Salin Caption'}
                   </button>
+                  {clipLink && (
+                    <button className={styles.subtitleBtn} onClick={handleCopyLink} id="copy-link-btn">
+                      🔗 Salin Link Klip
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Subtitle Generator ── */}
+              <div className={styles.subtitleSection}>
+                <div className={styles.subtitleHeader}>
+                  <span className={styles.subtitleTitle}>🗒️ Terjemahan Subtitle Otomatis</span>
+                  <span className={styles.subtitleHint}>Buat file .srt yang disertakan dalam unduhan</span>
+                </div>
+                <div className={styles.subtitleControls}>
+                  <div className={styles.langGroup}>
+                    <label className={styles.langLabel}>Bahasa Sumber</label>
+                    <select className={styles.langSelect} value={sourceLang} onChange={e => setSourceLang(e.target.value)} id="source-lang-select">
+                      {SOURCE_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                    </select>
+                  </div>
+                  <div className={styles.langArrow}>→</div>
+                  <div className={styles.langGroup}>
+                    <label className={styles.langLabel}>Bahasa Tujuan</label>
+                    <select className={styles.langSelect} value={selectedLang} onChange={e => { setSelectedLang(e.target.value); setSubtitleReady(false); }} id="subtitle-lang-select">
+                      {SUPPORTED_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                    </select>
+                  </div>
+                  <button
+                    className={`${styles.subtitleBtn} ${subtitleReady ? styles.subtitleDone : ''}`}
+                    onClick={handleGenerateSubtitles}
+                    disabled={isGeneratingSubs || !isReady}
+                    id="generate-subtitles-btn"
+                    style={{ alignSelf: 'flex-end' }}
+                  >
+                    {isGeneratingSubs ? '⏳ Menerjemahkan...' : subtitleReady ? '✅ Buat Ulang' : '🌐 Buat Subtitle'}
+                  </button>
+                </div>
+                {subtitleReady && (
+                  <motion.div className={styles.srtPreview} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                    <span className={styles.srtLabel}>Preview SRT:</span>
+                    <pre className={styles.srtContent}>
+                      {(exportingClip.subtitleSrt || '').split('\n').slice(0, 9).join('\n')}{'\n...'}
+                    </pre>
+                  </motion.div>
                 )}
               </div>
-            </div>
 
-            {/* ── Subtitle Generator ── */}
-            <div className={styles.subtitleSection}>
-              <div className={styles.subtitleHeader}>
-                <span className={styles.subtitleTitle}>🗒️ Terjemahan Subtitle Otomatis</span>
-                <span className={styles.subtitleHint}>Buat file .srt yang disertakan dalam unduhan</span>
-              </div>
-              <div className={styles.subtitleControls}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    Bahasa Sumber
-                  </label>
-                  <select
-                    className={styles.langSelect}
-                    value={sourceLang}
-                    onChange={e => setSourceLang(e.target.value)}
-                    id="source-lang-select"
-                  >
-                    {SOURCE_LANGUAGES.map(l => (
-                      <option key={l.code} value={l.code}>{l.name}</option>
-                    ))}
-                  </select>
+              {/* ── Upload Video + Process MP4 ── */}
+              <div className={styles.subtitleSection}>
+                <div className={styles.subtitleHeader}>
+                  <span className={styles.subtitleTitle}>🎬 Proses & Unduh Video MP4</span>
+                  <span className={styles.subtitleHint}>Upload file video, lalu FFmpeg akan memproses dengan caption tertanam</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', paddingTop: '18px', color: 'var(--text-muted)' }}>→</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    Bahasa Tujuan
-                  </label>
-                  <select
-                    className={styles.langSelect}
-                    value={selectedLang}
-                    onChange={e => { setSelectedLang(e.target.value); setSubtitleReady(false); }}
-                    id="subtitle-lang-select"
-                  >
-                    {SUPPORTED_LANGUAGES.map(l => (
-                      <option key={l.code} value={l.code}>{l.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  className={`${styles.subtitleBtn} ${subtitleReady ? styles.subtitleDone : ''}`}
-                  onClick={handleGenerateSubtitles}
-                  disabled={isGeneratingSubs || !isReady}
-                  id="generate-subtitles-btn"
-                  style={{ alignSelf: 'flex-end' }}
+
+                {/* Upload zone */}
+                <div
+                  className={`${styles.uploadZone} ${isDragging ? styles.uploadDragging : ''} ${uploadedFile ? styles.uploadDone : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  {isGeneratingSubs
-                    ? '⏳ Menerjemahkan...'
-                    : subtitleReady
-                      ? '✅ Buat Ulang'
-                      : '🌐 Buat Subtitle'}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                    id="video-upload-input"
+                  />
+                  {uploadedFile ? (
+                    <div className={styles.uploadInfo}>
+                      <span className={styles.uploadIcon}>✅</span>
+                      <span className={styles.uploadName}>{uploadedFile.name}</span>
+                      <span className={styles.uploadSize}>({(uploadedFile.size / 1024 / 1024).toFixed(1)} MB)</span>
+                    </div>
+                  ) : (
+                    <div className={styles.uploadInfo}>
+                      <span className={styles.uploadIcon}>📁</span>
+                      <span>Seret file video ke sini atau <strong>klik untuk pilih</strong></span>
+                      <span className={styles.uploadHint}>MP4, MOV, AVI, WebM — Maks 500MB</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Processing progress */}
+                {isProcessingVideo && (
+                  <div className={styles.videoProgressWrap}>
+                    <div className={styles.progressLabel}>
+                      <span>⚙️ Memproses video dengan caption...</span>
+                      <span className={styles.progressPercent}>{videoProgress}%</span>
+                    </div>
+                    <div className={styles.progressBar}>
+                      <div className={styles.progressFill} style={{ width: `${videoProgress}%` }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Process MP4 button */}
+                <button
+                  className={`${styles.downloadBtn} ${uploadedFile && isReady ? styles.ready : styles.pending}`}
+                  onClick={uploadedFile && isReady ? handleProcessVideo : undefined}
+                  disabled={!uploadedFile || !isReady || isProcessingVideo}
+                  id="process-video-btn"
+                >
+                  {isProcessingVideo
+                    ? `⏳ Memproses... ${videoProgress}%`
+                    : uploadedFile
+                      ? '🎬 Proses & Unduh MP4 dengan Caption'
+                      : '📁 Upload video dulu untuk proses MP4'}
                 </button>
               </div>
-              {subtitleReady && (
-                <motion.div
-                  className={styles.srtPreview}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                >
-                  <span className={styles.srtLabel}>Preview SRT:</span>
-                  <pre className={styles.srtContent}>
-                    {(exportingClip.subtitleSrt || '').split('\n').slice(0, 9).join('\n')}
-                    {'\n...'}
-                  </pre>
-                </motion.div>
-              )}
-            </div>
 
-            {/* Download Button */}
-            <button
-              className={`${styles.downloadBtn} ${isReady ? styles.ready : styles.pending}`}
-              onClick={isReady ? handleDownload : undefined}
-              disabled={!isReady}
-              id="export-download-btn"
-            >
-              {isReady
-                ? subtitleReady
-                  ? '⬇ Unduh Caption + SRT (.zip)'
-                  : '⬇ Unduh Caption (.zip)'
-                : '⏳ Memproses...'}
-            </button>
+              {/* Quick download metadata (tanpa video) */}
+              <button
+                className={`${styles.downloadBtn} ${isReady ? styles.readyAlt : styles.pending}`}
+                onClick={isReady ? handleDownloadMeta : undefined}
+                disabled={!isReady}
+                id="export-download-btn"
+              >
+                {isReady
+                  ? '📦 Unduh Caption + SRT (.zip)'
+                  : '⏳ Memproses...'}
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       </AnimatePresence>
