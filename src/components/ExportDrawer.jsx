@@ -20,13 +20,15 @@ export default function ExportDrawer() {
   const [subtitleReady, setSubtitleReady] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
 
-  // Video upload & processing
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
+  // Video processing (no manual upload needed)
   const [isProcessingVideo, setIsProcessingVideo] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const [exportError, setExportError] = useState(null);
-  const [exportPhase, setExportPhase] = useState(''); // Current phase label
+  const [exportPhase, setExportPhase] = useState('');
+  const [exportSuccess, setExportSuccess] = useState(false);
+
+  // Fallback: manual file picker (only shown if auto-fetch fails)
+  const [needsManualFile, setNeedsManualFile] = useState(false);
   const fileInputRef = useRef(null);
 
   // Simulated render progress for metadata readiness
@@ -95,94 +97,132 @@ export default function ExportDrawer() {
     dispatch({ type: 'SET_TOAST', payload: { message: '✅ Link klip tersalin!', type: 'success' } });
   };
 
-  // ── File upload handlers ──
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('video/')) {
-      setUploadedFile(file);
-      setExportError(null);
-    } else if (file) {
-      setExportError('File harus berformat video (MP4, MOV, WebM, AVI).');
+  // ── Build clean filename ──
+  const buildFilename = () => {
+    const safeName = 'clipforge-' + (exportingClip.title || 'output')
+      .replace(/[^a-z0-9\s]/gi, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase()
+      .substring(0, 40);
+    return `${safeName}.mp4`;
+  };
+
+  // ── Phase labels for progress display ──
+  const phaseLabels = {
+    0: '📦 Memuat FFmpeg…',
+    5: '🌐 Mengambil video sumber…',
+    15: '📦 FFmpeg siap',
+    18: '📂 Membaca file video…',
+    25: '📂 File video dimuat',
+    30: '⚙️ Encoding H.264…',
+    90: '💾 Membaca output…',
+    98: '🧹 Membersihkan…',
+    100: '✅ Selesai!',
+  };
+
+  const updatePhase = (progress) => {
+    setVideoProgress(progress);
+    const keys = Object.keys(phaseLabels).map(Number).sort((a, b) => a - b);
+    const key = keys.reverse().find(k => progress >= k) || 0;
+    setExportPhase(phaseLabels[key]);
+  };
+
+  // ── Try to auto-fetch the source video as a Blob ──
+  const fetchSourceVideo = async () => {
+    // Use the clip's videoUrl if available, otherwise fall back to currentUrl
+    const videoSrc = exportingClip.videoUrl || currentUrl;
+
+    if (!videoSrc) {
+      throw new Error('NO_SOURCE');
+    }
+
+    console.log('[ExportDrawer] Attempting auto-fetch from:', videoSrc);
+
+    try {
+      const res = await fetch(videoSrc);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const contentType = res.headers.get('content-type') || '';
+      // Ensure we got a video response, not an HTML page
+      if (contentType.includes('text/html')) {
+        throw new Error('CORS_OR_HTML');
+      }
+
+      const blob = await res.blob();
+      if (blob.size < 1000) {
+        throw new Error('TOO_SMALL');
+      }
+
+      console.log('[ExportDrawer] Auto-fetch successful, size:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
+      return blob;
+    } catch (err) {
+      console.warn('[ExportDrawer] Auto-fetch failed:', err.message);
+      throw new Error('NO_SOURCE');
     }
   };
 
-  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
-  const handleDragLeave = () => setIsDragging(false);
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('video/')) {
-      setUploadedFile(file);
-      setExportError(null);
-    } else if (file) {
-      setExportError('File harus berformat video.');
-    }
-  };
-
-  // ── Process & Download MP4 ──
-  const handleProcessVideo = async () => {
-    if (!uploadedFile) return;
-
+  // ── Main export handler: 1-click download ──
+  const handleExportMP4 = async (manualFile = null) => {
     setIsProcessingVideo(true);
     setVideoProgress(0);
     setExportError(null);
-
-    // Phase labels for UX
-    const phaseLabels = {
-      0: '📦 Memuat FFmpeg…',
-      15: '📦 FFmpeg siap',
-      18: '📂 Membaca file video…',
-      25: '📂 File video dimuat',
-      30: '⚙️ Memulai encoding H.264…',
-      90: '💾 Membaca output…',
-      98: '🧹 Membersihkan…',
-      100: '✅ Selesai!',
-    };
+    setExportSuccess(false);
+    setNeedsManualFile(false);
 
     console.log('[ExportDrawer] Starting export for clip:', exportingClip.title);
-    console.log('[ExportDrawer] Upload file:', uploadedFile.name, '| Size:', (uploadedFile.size / 1024 / 1024).toFixed(2), 'MB');
     console.log('[ExportDrawer] Clip range:', exportingClip.startTime, '->', exportingClip.endTime);
 
     try {
+      // Step 1: Get the video blob
+      updatePhase(5);
+      let videoBlob;
+
+      if (manualFile) {
+        // User provided a file via fallback picker
+        videoBlob = manualFile;
+        console.log('[ExportDrawer] Using manual file:', manualFile.name, '| Size:', (manualFile.size / 1024 / 1024).toFixed(2), 'MB');
+      } else {
+        // Try auto-fetch first
+        try {
+          videoBlob = await fetchSourceVideo();
+        } catch {
+          // Auto-fetch failed → ask user to pick file (show fallback)
+          console.log('[ExportDrawer] Auto-fetch unavailable, showing manual file picker');
+          setIsProcessingVideo(false);
+          setNeedsManualFile(true);
+          setExportPhase('');
+          return; // Exit — user will pick file and re-trigger
+        }
+      }
+
+      // Step 2: Process with FFmpeg
       const srt = exportingClip.subtitleSrt || '';
       const mp4Blob = await processVideoWithCaptions(
-        uploadedFile,
+        videoBlob,
         srt,
         exportingClip.startTime || 0,
         exportingClip.endTime || 0,
-        (progress) => {
-          setVideoProgress(progress);
-          // Find the closest phase label
-          const keys = Object.keys(phaseLabels).map(Number).sort((a, b) => a - b);
-          const key = keys.reverse().find(k => progress >= k) || 0;
-          setExportPhase(phaseLabels[key]);
-        }
+        updatePhase
       );
 
-      // Validate the blob — must be at least 10KB for a valid MP4
+      // Step 3: Validate output
       const MIN_SIZE = 10 * 1024; // 10 KB
       console.log('[ExportDrawer] MP4 blob size:', mp4Blob?.size, 'bytes');
 
       if (!mp4Blob || mp4Blob.size < MIN_SIZE) {
         throw new Error(
           `Output MP4 terlalu kecil (${mp4Blob ? (mp4Blob.size / 1024).toFixed(1) + ' KB' : '0 bytes'}). ` +
-          `Minimum ${(MIN_SIZE / 1024).toFixed(0)} KB. Pastikan file video valid dan tidak corrupt.`
+          `Pastikan file video valid dan durasinya cukup.`
         );
       }
 
-      // Build a clean, descriptive filename
-      const safeName = 'clipforge-' + (exportingClip.title || 'output')
-        .replace(/[^a-z0-9\s]/gi, '')
-        .replace(/\s+/g, '-')
-        .toLowerCase()
-        .substring(0, 40);
-      const filename = `${safeName}.mp4`;
-
+      // Step 4: Trigger download
+      const filename = buildFilename();
       console.log('[ExportDrawer] ✅ Download triggered:', filename, '| Size:', (mp4Blob.size / 1024 / 1024).toFixed(2), 'MB');
       downloadBlob(mp4Blob, filename);
 
       await actions.exportClip(exportingClip.id);
+      setExportSuccess(true);
       dispatch({ type: 'SET_TOAST', payload: { message: '✅ Video MP4 berhasil diunduh!', type: 'success' } });
     } catch (err) {
       console.error('[ExportDrawer] ❌ Video processing failed:', err);
@@ -191,6 +231,17 @@ export default function ExportDrawer() {
     } finally {
       setIsProcessingVideo(false);
       setExportPhase('');
+    }
+  };
+
+  // ── Fallback file picker handler ──
+  const handleFallbackFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('video/')) {
+      // Immediately start processing with the selected file
+      handleExportMP4(file);
+    } else if (file) {
+      setExportError('File harus berformat video (MP4, MOV, WebM).');
     }
   };
 
@@ -295,12 +346,6 @@ export default function ExportDrawer() {
                     {subtitleReady ? `✅ ${exportingClip.subtitleLang?.toUpperCase() || 'SELESAI'}` : 'Belum dibuat'}
                   </span>
                 </div>
-                <div className={styles.specRow}>
-                  <span className={styles.specLabel}>FFmpeg</span>
-                  <span className={`${styles.specValue} ${ffmpegOk ? styles.specGreen : ''}`}>
-                    {ffmpegOk ? '✅ Didukung' : '❌ Tidak didukung'}
-                  </span>
-                </div>
               </div>
 
               {/* ── Caption Siap Posting ── */}
@@ -370,12 +415,12 @@ export default function ExportDrawer() {
                 )}
               </div>
 
-              {/* ── Upload Video + Process MP4 ── */}
+              {/* ── Export MP4 Section (Simplified) ── */}
               <div className={styles.subtitleSection}>
                 <div className={styles.subtitleHeader}>
-                  <span className={styles.subtitleTitle}>🎬 Proses & Unduh Video MP4</span>
+                  <span className={styles.subtitleTitle}>🎬 Download Video MP4</span>
                   <span className={styles.subtitleHint}>
-                    Upload file video → FFmpeg memproses di browser → unduh MP4 dengan caption tertanam
+                    Klik tombol di bawah untuk langsung download klip dalam format MP4
                   </span>
                 </div>
 
@@ -385,38 +430,6 @@ export default function ExportDrawer() {
                     ⚠️ Browser Anda tidak mendukung WebAssembly. Gunakan Chrome, Firefox, atau Edge versi terbaru.
                   </div>
                 )}
-
-                {/* Upload zone */}
-                <div
-                  className={`${styles.uploadZone} ${isDragging ? styles.uploadDragging : ''} ${uploadedFile ? styles.uploadDone : ''}`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="video/mp4,video/quicktime,video/webm,video/avi,video/x-matroska,video/*"
-                    onChange={handleFileSelect}
-                    style={{ display: 'none' }}
-                    id="video-upload-input"
-                  />
-                  {uploadedFile ? (
-                    <div className={styles.uploadInfo}>
-                      <span className={styles.uploadIcon}>✅</span>
-                      <span className={styles.uploadName}>{uploadedFile.name}</span>
-                      <span className={styles.uploadSize}>({(uploadedFile.size / 1024 / 1024).toFixed(1)} MB)</span>
-                      <span className={styles.uploadHint}>Klik lagi untuk ganti file</span>
-                    </div>
-                  ) : (
-                    <div className={styles.uploadInfo}>
-                      <span className={styles.uploadIcon}>📁</span>
-                      <span>Seret file video ke sini atau <strong>klik untuk pilih</strong></span>
-                      <span className={styles.uploadHint}>MP4, MOV, AVI, WebM — Maks 500MB</span>
-                    </div>
-                  )}
-                </div>
 
                 {/* Processing progress */}
                 {isProcessingVideo && (
@@ -434,6 +447,13 @@ export default function ExportDrawer() {
                   </div>
                 )}
 
+                {/* Success state */}
+                {exportSuccess && !isProcessingVideo && (
+                  <div className={styles.successBox}>
+                    ✅ MP4 berhasil dibuat dan diunduh! Cek folder Downloads Anda.
+                  </div>
+                )}
+
                 {/* Error display */}
                 {exportError && (
                   <div className={styles.errorBox}>
@@ -441,20 +461,46 @@ export default function ExportDrawer() {
                   </div>
                 )}
 
-                {/* Process MP4 button */}
+                {/* Fallback: manual file picker (only shown when auto-fetch fails) */}
+                {needsManualFile && !isProcessingVideo && (
+                  <div className={styles.fallbackNotice}>
+                    <p>
+                      ⚠️ Video tidak bisa diambil otomatis (link YouTube/platform lain tidak mendukung direct download dari browser).
+                    </p>
+                    <p style={{ marginTop: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      Silakan pilih file video dari komputer Anda:
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/mp4,video/quicktime,video/webm,video/*"
+                      onChange={handleFallbackFileSelect}
+                      style={{ display: 'none' }}
+                      id="video-fallback-input"
+                    />
+                    <button
+                      className={styles.fallbackBtn}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      📁 Pilih File Video
+                    </button>
+                  </div>
+                )}
+
+                {/* Main download button */}
                 <button
-                  className={`${styles.downloadBtn} ${uploadedFile && isReady && ffmpegOk ? styles.ready : styles.pending}`}
-                  onClick={uploadedFile && isReady && ffmpegOk ? handleProcessVideo : undefined}
-                  disabled={!uploadedFile || !isReady || isProcessingVideo || !ffmpegOk}
+                  className={`${styles.downloadBtn} ${isReady && ffmpegOk && !isProcessingVideo ? styles.ready : styles.pending}`}
+                  onClick={isReady && ffmpegOk && !isProcessingVideo ? () => handleExportMP4() : undefined}
+                  disabled={!isReady || isProcessingVideo || !ffmpegOk}
                   id="process-video-btn"
                 >
                   {isProcessingVideo
                     ? `⏳ Memproses… ${videoProgress}%`
                     : !ffmpegOk
                       ? '⚠️ FFmpeg tidak didukung browser ini'
-                      : uploadedFile
-                        ? '🎬 Proses & Unduh MP4 dengan Caption'
-                        : '📁 Upload video dulu untuk proses MP4'}
+                      : exportSuccess
+                        ? '🔄 Download Ulang MP4'
+                        : '🎬 Download MP4'}
                 </button>
               </div>
 
