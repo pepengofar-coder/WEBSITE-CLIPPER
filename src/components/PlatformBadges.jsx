@@ -2,7 +2,10 @@ import { motion } from 'framer-motion';
 
 const platforms = [
   { id: 'youtube', label: 'YouTube', icon: '▶️', color: '#FF0000' },
-  { id: 'spotify', label: 'Spotify', icon: '🎵', color: '#1DB954' },
+  { id: 'tiktok', label: 'TikTok', icon: '🎵', color: '#00F2EA' },
+  { id: 'instagram', label: 'Instagram', icon: '📸', color: '#E4405F' },
+  { id: 'facebook', label: 'Facebook', icon: '👤', color: '#1877F2' },
+  { id: 'spotify', label: 'Spotify', icon: '🎧', color: '#1DB954' },
   { id: 'podcast', label: 'Podcast', icon: '🎙️', color: '#9B59B6' },
 ];
 
@@ -12,7 +15,7 @@ export default function PlatformBadges() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '12px',
+      gap: '10px',
       flexWrap: 'wrap',
     }}>
       {platforms.map((p, i) => (
@@ -20,16 +23,16 @@ export default function PlatformBadges() {
           key={p.id}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 + i * 0.1, duration: 0.4 }}
+          transition={{ delay: 0.5 + i * 0.08, duration: 0.4 }}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '8px 18px',
+            gap: '6px',
+            padding: '6px 14px',
             borderRadius: 'var(--radius-full)',
             background: 'var(--glass-bg)',
             border: 'var(--border-card)',
-            fontSize: '0.85rem',
+            fontSize: '0.8rem',
             fontWeight: 500,
             color: 'var(--text-secondary)',
             cursor: 'default',
@@ -41,7 +44,7 @@ export default function PlatformBadges() {
             color: '#f1f1f5',
           }}
         >
-          <span style={{ fontSize: '1rem' }}>{p.icon}</span>
+          <span style={{ fontSize: '0.9rem' }}>{p.icon}</span>
           <span>{p.label}</span>
         </motion.div>
       ))}

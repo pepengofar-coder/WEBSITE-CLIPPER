@@ -223,18 +223,7 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-  /**
-   * Generate + store subtitles for a clip.
-   * @param {string} clipId
-   * @param {string} targetLang - ISO language code (e.g. 'id', 'en')
-   * @param {string} sourceLang - source language code (default: 'en')
-   */
-  const generateSubtitles = useCallback(async (clipId, targetLang = 'id', sourceLang = 'en') => {
-    // Find clip in current state (snapshot via closure would be stale; use dispatch to read)
-    // We'll use a ref-trick: pass the clip directly from the caller.
-    // This function receives the clip object from ExportDrawer.
-    throw new Error('Use generateSubtitlesForClip(clip, targetLang) instead.');
-  }, []);
+
 
   /**
    * Generate + store subtitles. Accepts the clip object directly.
@@ -284,7 +273,6 @@ export function AppProvider({ children }) {
     finishProcessing,
     saveClipEdit,
     exportClip,
-    generateSubtitles,
     generateSubtitlesForClip,
     clearToast,
   };

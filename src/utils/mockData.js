@@ -134,6 +134,12 @@ export function getViralLevel(score) {
 export function detectPlatform(url) {
   if (!url) return null;
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+  if (url.includes('tiktok.com')) return 'tiktok';
+  if (url.includes('instagram.com')) return 'instagram';
+  if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+  if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
+  if (url.includes('vimeo.com')) return 'vimeo';
+  if (url.includes('dailymotion.com') || url.includes('dai.ly')) return 'dailymotion';
   if (url.includes('spotify.com')) return 'spotify';
   if (url.includes('podcasts.apple.com')) return 'apple-podcast';
   if (url.includes('anchor.fm') || url.includes('spotify.com/episode')) return 'podcast';
