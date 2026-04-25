@@ -109,7 +109,27 @@ export default function ClipCard({ clip, index }) {
             url={clip.sourceUrl || clip.webpageUrl || currentUrl}
             isPlaying={isPlaying}
             startTime={clip.startTime}
+            endTime={clip.endTime}
           />
+        )}
+
+        {/* Timestamp Overlay (shown when playing) */}
+        {isPlaying && clip.endTime > clip.startTime && (
+          <div style={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            zIndex: 3,
+            background: 'rgba(0,0,0,0.6)',
+            color: '#fff',
+            fontSize: '0.65rem',
+            padding: '4px 8px',
+            borderRadius: '12px',
+            fontFamily: 'monospace',
+            backdropFilter: 'blur(4px)'
+          }}>
+            {formatDuration(clip.startTime)} - {formatDuration(clip.endTime)}
+          </div>
         )}
 
         {/* Gradient overlay + play button */}

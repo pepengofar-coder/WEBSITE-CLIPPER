@@ -105,11 +105,12 @@ export default function ExportDrawer() {
     setExportSuccess(false);
 
     console.log('[ExportDrawer] Exporting via backend:', {
+      videoId: exportingClip.id || sourceInfo?.videoId,
       sourceUrl: clipSourceUrl,
-      title: exportingClip.title,
+      thumbnailUrl: exportingClip.thumbnailUrl || sourceInfo?.thumbnail,
       startTime: exportingClip.startTime,
       endTime: exportingClip.endTime,
-      quality,
+      subtitleLang: selectedLang,
     });
 
     try {
@@ -122,7 +123,10 @@ export default function ExportDrawer() {
         withSubtitles: subtitleReady,
       });
 
-      console.log('[ExportDrawer] ✅ Export complete:', result);
+      console.log('[ExportDrawer] ✅ Export complete:', {
+        downloadUrl: result.downloadUrl,
+        outputSize: result.size
+      });
 
       // Trigger download
       triggerDownload(result.downloadUrl, result.filename);

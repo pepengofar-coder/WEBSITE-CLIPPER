@@ -43,14 +43,20 @@ function ensureYTApi() {
  * VideoPreview — 9:16 video preview component with sound.
  * Uses YouTube IFrame Player API for full control.
  */
-export default function VideoPreview({ url, isPlaying, startTime = 0, style = {} }) {
+export default function VideoPreview({ url, isPlaying, startTime = 0, endTime = 0, style = {} }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const videoRef = useRef(null);
-  const playerDivRef = useRef(null);
   const ytId = extractYouTubeId(url);
   const [playerReady, setPlayerReady] = useState(false);
   const mountedRef = useRef(true);
+
+  // Helper to format timestamp
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   // Track mounted state
   useEffect(() => {
@@ -73,7 +79,6 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
       }
       if (destroyed || !mountedRef.current) return;
 
-      // Create a stable div for the player
       const wrapper = containerRef.current?.querySelector('.yt-player-wrapper');
       if (!wrapper) return;
 
@@ -95,6 +100,7 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
             fs: 0,
             iv_load_policy: 3,
             start: Math.floor(startTime),
+            end: endTime > startTime ? Math.floor(endTime) : undefined,
             playsinline: 1,
             origin: window.location.origin,
           },
@@ -105,14 +111,17 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
                 setPlayerReady(true);
               }
             },
-            onError: () => {
-              // Silently handle YouTube player errors
+            onStateChange: (event) => {
+              // If video ends (0), loop back to startTime
+              if (event.data === window.YT.PlayerState.ENDED) {
+                player.seekTo(startTime, true);
+                player.playVideo();
+              }
             },
+            onError: () => {},
           },
         });
-      } catch {
-        // YouTube player creation failed
-      }
+      } catch {}
     };
 
     initPlayer();
@@ -125,12 +134,13 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
       }
       playerRef.current = null;
     };
-  }, [ytId]); // Only re-init when video ID changes
+  }, [ytId]);
 
-  // Handle play/pause
+  // Handle play/pause and polling for end time
   useEffect(() => {
     if (!playerReady || !playerRef.current) return;
     const p = playerRef.current;
+    let intervalId;
 
     try {
       if (typeof p.getPlayerState !== 'function') return;
@@ -138,25 +148,56 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
       if (isPlaying) {
         p.unMute();
         p.setVolume(80);
-        p.seekTo(startTime, true);
+        // Force seek if we're way out of bounds
+        const current = p.getCurrentTime();
+        if (current < startTime || (endTime > startTime && current >= endTime)) {
+          p.seekTo(startTime, true);
+        }
         p.playVideo();
+
+        // Fallback polling to enforce endTime in case native "end" fails
+        if (endTime > startTime) {
+          intervalId = setInterval(() => {
+            if (p.getCurrentTime() >= endTime) {
+              p.seekTo(startTime, true);
+            }
+          }, 500);
+        }
       } else {
         p.pauseVideo();
       }
-    } catch {
-      // Player might have been destroyed
-    }
-  }, [isPlaying, playerReady, startTime]);
+    } catch {}
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isPlaying, playerReady, startTime, endTime]);
 
   // Control native <video> play/pause (fallback)
   useEffect(() => {
     if (ytId || !videoRef.current) return;
+    const v = videoRef.current;
+    
+    const handleTimeUpdate = () => {
+      if (endTime > startTime && v.currentTime >= endTime) {
+        v.currentTime = startTime;
+        v.play().catch(()=>{});
+      }
+    };
+
     if (isPlaying) {
-      videoRef.current.play().catch(() => {});
+      if (v.currentTime < startTime || (endTime > startTime && v.currentTime >= endTime)) {
+        v.currentTime = startTime;
+      }
+      v.play().catch(() => {});
+      v.addEventListener('timeupdate', handleTimeUpdate);
     } else {
-      videoRef.current.pause();
+      v.pause();
+      v.removeEventListener('timeupdate', handleTimeUpdate);
     }
-  }, [isPlaying, ytId]);
+
+    return () => v.removeEventListener('timeupdate', handleTimeUpdate);
+  }, [isPlaying, ytId, startTime, endTime]);
 
   const containerStyle = {
     position: 'relative',

@@ -57,6 +57,14 @@ function generateClipsFromSource(sourceInfo) {
 
     if (startTime < 0 || endTime <= startTime) continue;
 
+    let thumbUrl = thumbnail;
+    if (platform === 'youtube' && webpageUrl) {
+      const match = webpageUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([a-zA-Z0-9_-]{11})/);
+      if (match && match[1]) {
+        thumbUrl = `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+      }
+    }
+
     clips.push({
       id: `clip-${i + 1}`,
       title: clipTitles[i % clipTitles.length],
@@ -72,7 +80,7 @@ function generateClipsFromSource(sourceInfo) {
       sourceUrl: sourceUrl || webpageUrl,
       webpageUrl: webpageUrl,
       sourceTitle: title,
-      thumbnailUrl: thumbnail,
+      thumbnailUrl: thumbUrl,
       platform: platform,
     });
 
