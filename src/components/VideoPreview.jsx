@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 /**
  * Extract YouTube video ID from various URL formats.
@@ -16,8 +16,7 @@ let ytApiReady = false;
 let ytApiCallbacks = [];
 
 function ensureYTApi() {
-  if (ytApiReady) return Promise.resolve();
-  if (window.YT && window.YT.Player) {
+  if (ytApiReady || (window.YT && window.YT.Player)) {
     ytApiReady = true;
     return Promise.resolve();
   }
@@ -48,51 +47,72 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const videoRef = useRef(null);
+  const playerDivRef = useRef(null);
   const ytId = extractYouTubeId(url);
   const [playerReady, setPlayerReady] = useState(false);
+  const mountedRef = useRef(true);
+
+  // Track mounted state
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Initialize YouTube player
   useEffect(() => {
-    if (!ytId || !containerRef.current) return;
+    if (!ytId) return;
 
     let player = null;
     let destroyed = false;
 
     const initPlayer = async () => {
-      await ensureYTApi();
-      if (destroyed) return;
+      try {
+        await ensureYTApi();
+      } catch {
+        return;
+      }
+      if (destroyed || !mountedRef.current) return;
 
-      // Create a div for the player inside the container
-      const playerDiv = document.createElement('div');
-      playerDiv.id = `yt-player-${Math.random().toString(36).slice(2, 9)}`;
+      // Create a stable div for the player
       const wrapper = containerRef.current?.querySelector('.yt-player-wrapper');
       if (!wrapper) return;
+
+      const divId = `yt-player-${Math.random().toString(36).slice(2, 9)}`;
+      const playerDiv = document.createElement('div');
+      playerDiv.id = divId;
       wrapper.innerHTML = '';
       wrapper.appendChild(playerDiv);
 
-      player = new window.YT.Player(playerDiv.id, {
-        videoId: ytId,
-        playerVars: {
-          autoplay: 0,
-          controls: 0,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          fs: 0,
-          iv_load_policy: 3,
-          start: Math.floor(startTime),
-          playsinline: 1,
-          origin: window.location.origin,
-        },
-        events: {
-          onReady: () => {
-            if (!destroyed) {
-              playerRef.current = player;
-              setPlayerReady(true);
-            }
+      try {
+        player = new window.YT.Player(divId, {
+          videoId: ytId,
+          playerVars: {
+            autoplay: 0,
+            controls: 0,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0,
+            fs: 0,
+            iv_load_policy: 3,
+            start: Math.floor(startTime),
+            playsinline: 1,
+            origin: window.location.origin,
           },
-        },
-      });
+          events: {
+            onReady: () => {
+              if (!destroyed && mountedRef.current) {
+                playerRef.current = player;
+                setPlayerReady(true);
+              }
+            },
+            onError: () => {
+              // Silently handle YouTube player errors
+            },
+          },
+        });
+      } catch {
+        // YouTube player creation failed
+      }
     };
 
     initPlayer();
@@ -113,6 +133,8 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
     const p = playerRef.current;
 
     try {
+      if (typeof p.getPlayerState !== 'function') return;
+
       if (isPlaying) {
         p.unMute();
         p.setVolume(80);
@@ -121,7 +143,9 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
       } else {
         p.pauseVideo();
       }
-    } catch {}
+    } catch {
+      // Player might have been destroyed
+    }
   }, [isPlaying, playerReady, startTime]);
 
   // Control native <video> play/pause (fallback)
@@ -147,7 +171,6 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
   if (ytId) {
     return (
       <div ref={containerRef} style={containerStyle}>
-        {/* Scaled 16:9 player to fill 9:16 space */}
         <div
           className="yt-player-wrapper"
           style={{
@@ -161,7 +184,6 @@ export default function VideoPreview({ url, isPlaying, startTime = 0, style = {}
           }}
         />
 
-        {/* Loading state */}
         {!playerReady && (
           <div style={{
             position: 'absolute',

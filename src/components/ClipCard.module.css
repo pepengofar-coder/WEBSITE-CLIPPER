@@ -23,7 +23,6 @@
   background: #000;
   overflow: hidden;
   cursor: pointer;
-  /* Ensure child VideoPreview fills the area */
   display: flex;
   flex-direction: column;
 }
@@ -189,22 +188,25 @@
 /* Actions */
 .actions {
   display: flex;
-  gap: var(--space-sm);
+  gap: 4px;
   margin-top: auto;
   padding-top: var(--space-sm);
+  flex-wrap: wrap;
 }
 
 .actionBtn {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px;
-  font-size: 0.8rem;
+  gap: 3px;
+  padding: 8px 4px;
+  font-size: 0.7rem;
   font-weight: 600;
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .editBtn {
@@ -241,4 +243,43 @@
   background: rgba(16, 185, 129, 0.2);
   border-color: rgba(16, 185, 129, 0.4);
   color: #34d399;
+}
+
+.thumbBtn {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+}
+
+.thumbBtn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.thumbBtn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .cardInfo {
+    padding: var(--space-sm);
+  }
+
+  .cardTitle {
+    font-size: 0.85rem;
+  }
+
+  .actionBtn {
+    padding: 7px 3px;
+    font-size: 0.65rem;
+  }
+
+  .playBtn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
 }

@@ -140,4 +140,21 @@
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-sm);
   }
+
+  .headerTitle {
+    font-size: 1.2rem;
+  }
+
+  .headerBtn {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .clipGrid {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+    margin: 0 auto;
+  }
 }
