@@ -80,6 +80,25 @@
   width: 100%;
 }
 
+.navCta {
+  padding: 8px 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent-primary);
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.3);
+}
+
+.navCta:hover {
+  background: var(--accent-primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+  color: #fff;
+}
+
 .newClipBtn {
   display: flex;
   align-items: center;
@@ -100,16 +119,77 @@
   box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
 }
 
-@media (max-width: 640px) {
+/* Mobile hamburger */
+.mobileToggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  cursor: pointer;
+  z-index: 101;
+}
+
+.mobileToggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all var(--transition-base);
+}
+
+.mobileToggleOpen span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.mobileToggleOpen span:nth-child(2) {
+  opacity: 0;
+}
+
+.mobileToggleOpen span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+@media (max-width: 768px) {
   .navbar {
     padding: 0 var(--space-md);
   }
 
+  .mobileToggle {
+    display: flex;
+  }
+
   .navLinks {
-    gap: var(--space-md);
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 260px;
+    height: 100vh;
+    background: rgba(14, 14, 22, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 90px var(--space-xl) var(--space-xl);
+    gap: var(--space-lg);
+    transform: translateX(100%);
+    transition: transform var(--transition-base);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 100;
+  }
+
+  .navLinksOpen {
+    transform: translateX(0);
   }
 
   .navLink {
-    font-size: 0.8rem;
+    font-size: 1rem;
+  }
+
+  .navCta {
+    width: 100%;
+    text-align: center;
+    padding: 12px 20px;
+    margin-top: var(--space-md);
   }
 }

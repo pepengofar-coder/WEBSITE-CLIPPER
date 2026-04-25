@@ -1,7 +1,13 @@
 import { motion } from 'framer-motion';
 import LinkInput from '../components/LinkInput';
 import PlatformBadges from '../components/PlatformBadges';
-import FeatureCards from '../components/FeatureCards';
+import HeroSection from '../components/landing/HeroSection';
+import DemoSection from '../components/landing/DemoSection';
+import BenefitsSection from '../components/landing/BenefitsSection';
+import PricingSection from '../components/landing/PricingSection';
+import TestimonialsSection from '../components/landing/TestimonialsSection';
+import FinalCtaSection from '../components/landing/FinalCtaSection';
+import Footer from '../components/landing/Footer';
 import styles from './HomePage.module.css';
 
 export default function HomePage() {
@@ -14,45 +20,38 @@ export default function HomePage() {
 
       <div className={styles.content}>
         {/* Hero */}
-        <motion.div
-          className={styles.heroSection}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-        >
-          <span className={styles.badge}>✨ Generator Klip Bertenaga AI</span>
-          <h1 className={styles.heroTitle}>
-            Ubah Video Apapun Jadi{' '}
-            <span className={styles.heroTitleGradient}>Klip Pendek Viral</span>
-          </h1>
-          <p className={styles.heroSubtitle}>
-            Tempel link. Dapatkan klip siap scroll yang dioptimalkan untuk TikTok, Reels &amp; YouTube Shorts — siap dalam hitungan detik.
-          </p>
-        </motion.div>
+        <HeroSection />
 
         {/* Input Section */}
         <motion.div
+          id="hero-input"
           className={styles.inputSection}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
         >
           <LinkInput />
           <PlatformBadges />
         </motion.div>
 
-        {/* Features */}
-        <FeatureCards />
+        {/* Demo / Cara Kerja */}
+        <DemoSection />
 
-        {/* Footer */}
-        <div className={styles.footer}>
-          <span>© 2026 ClipForge</span>
-          <span>•</span>
-          <a href="#privacy">Privasi</a>
-          <span>•</span>
-          <a href="#terms">Ketentuan</a>
-        </div>
+        {/* Benefits */}
+        <BenefitsSection />
+
+        {/* Pricing */}
+        <PricingSection />
+
+        {/* Testimonials */}
+        <TestimonialsSection />
+
+        {/* Final CTA */}
+        <FinalCtaSection />
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

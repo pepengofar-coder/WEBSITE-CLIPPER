@@ -5,6 +5,7 @@ import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { hasResults } = useAppState();
@@ -23,6 +24,23 @@ export default function Navbar() {
 
   const isHome = location.pathname === '/';
 
+  const navItems = [
+    { label: 'Cara Kerja', href: '#demo' },
+    { label: 'Keunggulan', href: '#benefits' },
+    { label: 'Harga', href: '#pricing' },
+    { label: 'Testimoni', href: '#testimonials' },
+  ];
+
+  const handleNavClick = (href) => {
+    setMobileOpen(false);
+    if (!isHome) {
+      navigate('/');
+      setTimeout(() => {
+        document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
       <Link to="/" className={styles.logo}>
@@ -30,16 +48,40 @@ export default function Navbar() {
         <span>Clip<span className={styles.logoAccent}>Forge</span></span>
       </Link>
 
-      <div className={styles.navLinks}>
-        {isHome && (
-          <a href="#features" className={styles.navLink}>Cara Kerja</a>
-        )}
+      <div className={`${styles.navLinks} ${mobileOpen ? styles.navLinksOpen : ''}`}>
+        {isHome && navItems.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className={styles.navLink}
+            onClick={() => handleNavClick(item.href)}
+          >
+            {item.label}
+          </a>
+        ))}
         {hasResults && !isHome && (
           <button className={styles.newClipBtn} onClick={handleNewClip}>
             ← Klip Baru
           </button>
         )}
+        {isHome && (
+          <a href="#hero-input" className={styles.navCta}>
+            Coba Gratis
+          </a>
+        )}
       </div>
+
+      {isHome && (
+        <button
+          className={`${styles.mobileToggle} ${mobileOpen ? styles.mobileToggleOpen : ''}`}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      )}
     </nav>
   );
 }
