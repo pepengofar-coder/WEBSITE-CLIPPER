@@ -120,6 +120,16 @@
   color: #ffffff;
 }
 
+/* Thumbnail image */
+.thumbnailImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
 /* Card Info */
 .cardInfo {
   padding: var(--space-md);
@@ -127,6 +137,15 @@
   flex-direction: column;
   gap: var(--space-sm);
   flex: 1;
+}
+
+.sourceLabel {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: -2px 0;
 }
 
 .cardHeader {

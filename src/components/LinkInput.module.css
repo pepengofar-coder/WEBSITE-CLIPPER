@@ -117,13 +117,110 @@
   transform: translateX(2px);
 }
 
-.errorMsg {
+/* ── Checking bar (loading state) ── */
+.checkingBar {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 0 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.checkingBar::before {
+  content: '';
   position: absolute;
-  bottom: -28px;
-  left: 20px;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gradient-primary);
+  animation: checkSlide 1.5s ease-in-out infinite;
+}
+
+@keyframes checkSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── Source video preview card ── */
+.sourceCard {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-lg);
+  animation: fadeInUp 0.35s ease;
+}
+
+.sourceThumb {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  background: var(--bg-primary);
+}
+
+.sourceDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sourcePlatform {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-primary-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sourceTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sourceMeta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.sourceCheck {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+/* ── Error message ── */
+.errorMsg {
+  margin-top: 8px;
+  padding: 0 8px;
   font-size: 0.8rem;
   color: var(--accent-danger);
   animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 @media (max-width: 640px) {
@@ -148,5 +245,19 @@
 
   .linkIcon {
     display: none;
+  }
+
+  .sourceCard {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .sourceThumb {
+    width: 100%;
+    height: 80px;
+  }
+
+  .sourceTitle {
+    white-space: normal;
   }
 }

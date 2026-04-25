@@ -1,73 +1,4 @@
 // Data dan utilitas untuk ClipForge (Bahasa Indonesia)
-export const MOCK_CLIPS = [
-  {
-    id: 'clip-1',
-    title: 'AI Akan Menggantikan Segalanya',
-    topic: 'Artificial Intelligence',
-    viralScore: 95,
-    duration: 42,
-    startTime: 723,
-    endTime: 765,
-    captionStyle: 'bold-pop',
-    thumbnail: null,
-    transcript: "This is going to change everything. AI isn't just a tool anymore, it's becoming a collaborator. In five years, every creative process will have AI integrated...",
-  },
-  {
-    id: 'clip-2',
-    title: 'Hasil Pertama Neuralink',
-    topic: 'Technology',
-    viralScore: 87,
-    duration: 31,
-    startTime: 1845,
-    endTime: 1876,
-    captionStyle: 'bold-pop',
-    thumbnail: null,
-    transcript: "The first patient with Neuralink can now control a cursor just by thinking. That's not science fiction anymore, that's literally happening right now...",
-  },
-  {
-    id: 'clip-3',
-    title: 'Timeline Koloni Mars',
-    topic: 'Space',
-    viralScore: 72,
-    duration: 55,
-    startTime: 3200,
-    endTime: 3255,
-    captionStyle: 'neon-glow',
-    thumbnail: null,
-    transcript: "We're looking at 2030 for the first unmanned landing, and by 2035, we could have a small habitat. The biggest challenge isn't the rocket, it's keeping humans alive...",
-  },
-  {
-    id: 'clip-4',
-    title: 'Kenapa Media Sosial Rusak',
-    topic: 'Society',
-    viralScore: 68,
-    duration: 38,
-    startTime: 4500,
-    endTime: 4538,
-    captionStyle: 'minimal',
-    thumbnail: null,
-    transcript: "The algorithm doesn't care about truth, it cares about engagement. And what gets engagement? Outrage, fear, and controversy. That's the fundamental problem...",
-  },
-  {
-    id: 'clip-5',
-    title: 'Masa Depan Pendidikan',
-    topic: 'Education',
-    viralScore: 61,
-    duration: 47,
-    startTime: 5800,
-    endTime: 5847,
-    captionStyle: 'bold-pop',
-    thumbnail: null,
-    transcript: "Sitting in a classroom for 8 hours is an industrial-age concept. The future is personalized AI tutors that adapt to how each student learns best...",
-  },
-];
-
-export const MOCK_SOURCE = {
-  title: 'Joe Rogan Experience #2103 — Elon Musk',
-  platform: 'youtube',
-  url: 'https://www.youtube.com/watch?v=example123',
-  totalDuration: 10800,
-};
 
 export const PROCESSING_STEPS = [
   { id: 1, label: 'Mengunduh audio', icon: '📥' },
@@ -134,11 +65,12 @@ export function getViralLevel(score) {
 export function detectPlatform(url) {
   if (!url) return null;
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-  if (url.includes('tiktok.com')) return 'tiktok';
-  if (url.includes('instagram.com')) return 'instagram';
+  if (url.includes('tiktok.com') || url.includes('vm.tiktok.com')) return 'tiktok';
+  if (url.includes('instagram.com') || url.includes('instagr.am')) return 'instagram';
   if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
   if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
   if (url.includes('vimeo.com')) return 'vimeo';
+  if (url.includes('twitch.tv') || url.includes('clips.twitch.tv')) return 'twitch';
   if (url.includes('dailymotion.com') || url.includes('dai.ly')) return 'dailymotion';
   if (url.includes('spotify.com')) return 'spotify';
   if (url.includes('podcasts.apple.com')) return 'apple-podcast';

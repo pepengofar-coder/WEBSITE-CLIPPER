@@ -497,10 +497,13 @@
   .specRow {
     font-size: 0.8rem;
   }
+}
 
-  .uploadZone {
-    padding: var(--space-md);
-  }
+/* Indeterminate progress animation for server-side processing */
+@keyframes indeterminate {
+  0% { width: 0%; margin-left: 0; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 0%; margin-left: 100%; }
 }
 
 /* Override glow pulse for download button */

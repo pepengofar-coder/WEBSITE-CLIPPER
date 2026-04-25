@@ -20,8 +20,12 @@ export default function ClipCard({ clip, index }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [generatingThumb, setGeneratingThumb] = useState(false);
+  const [thumbError, setThumbError] = useState(false);
 
   const viralMeta = generateViralMeta(clip);
+
+  // Use the clip's thumbnail from source metadata
+  const thumbnailSrc = clip.thumbnailUrl || clip.thumbnail || null;
 
   const handleEdit = (e) => {
     e.stopPropagation();
@@ -67,6 +71,22 @@ export default function ClipCard({ clip, index }) {
     setGeneratingThumb(false);
   };
 
+  // If clip data is invalid, show fallback
+  if (!clip || !clip.title) {
+    return (
+      <motion.div
+        className={styles.card}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1, duration: 0.4 }}
+      >
+        <div className={styles.previewArea} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Clip tidak tersedia</span>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       className={styles.card}
@@ -76,11 +96,21 @@ export default function ClipCard({ clip, index }) {
     >
       {/* 9:16 Preview */}
       <div className={styles.previewArea} onClick={togglePlay}>
-        <VideoPreview
-          url={currentUrl}
-          isPlaying={isPlaying}
-          startTime={clip.startTime}
-        />
+        {/* Show real thumbnail or video preview */}
+        {thumbnailSrc && !isPlaying && !thumbError ? (
+          <img
+            src={thumbnailSrc}
+            alt={clip.sourceTitle || clip.title}
+            className={styles.thumbnailImg}
+            onError={() => setThumbError(true)}
+          />
+        ) : (
+          <VideoPreview
+            url={clip.sourceUrl || clip.webpageUrl || currentUrl}
+            isPlaying={isPlaying}
+            startTime={clip.startTime}
+          />
+        )}
 
         {/* Gradient overlay + play button */}
         <div className={styles.previewGradient}>
@@ -112,6 +142,13 @@ export default function ClipCard({ clip, index }) {
           <span className={styles.topic}>{clip.topic}</span>
         </div>
         <h3 className={styles.cardTitle}>{clip.title}</h3>
+
+        {/* Source title (from real metadata) */}
+        {clip.sourceTitle && (
+          <p className={styles.sourceLabel}>
+            📺 {clip.sourceTitle}
+          </p>
+        )}
 
         {/* Hashtags */}
         <div className={styles.hashtagRow}>
