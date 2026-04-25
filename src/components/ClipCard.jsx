@@ -4,6 +4,7 @@ import ViralBadge from './ViralBadge';
 import VideoPreview from './VideoPreview';
 import { formatDuration } from '../utils/mockData';
 import { generateViralMeta, generateClipLink } from '../utils/viralMeta';
+import { generateThumbnail, downloadThumbnail } from '../utils/thumbnailGenerator';
 import { useAppState, useAppDispatch } from '../context/AppContext';
 import styles from './ClipCard.module.css';
 
@@ -18,6 +19,7 @@ export default function ClipCard({ clip, index }) {
   const dispatch = useAppDispatch();
   const [isPlaying, setIsPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [generatingThumb, setGeneratingThumb] = useState(false);
 
   const viralMeta = generateViralMeta(clip);
 
@@ -40,19 +42,29 @@ export default function ClipCard({ clip, index }) {
     e.stopPropagation();
     try {
       await navigator.clipboard.writeText(viralMeta.caption);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback
       const ta = document.createElement('textarea');
       ta.value = viralMeta.caption;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleThumbnail = async (e) => {
+    e.stopPropagation();
+    setGeneratingThumb(true);
+    try {
+      const blob = await generateThumbnail(clip);
+      const safeName = clip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      downloadThumbnail(blob, `${safeName}_thumbnail.png`);
+    } catch (err) {
+      console.error('Thumbnail failed:', err);
+    }
+    setGeneratingThumb(false);
   };
 
   return (
@@ -111,13 +123,22 @@ export default function ClipCard({ clip, index }) {
         <div className={styles.cardMeta}>
           <span className={styles.duration}>⏱ {formatDuration(clip.duration)}</span>
         </div>
+
         <div className={styles.actions}>
           <button
             className={`${styles.actionBtn} ${styles.copyBtn}`}
             onClick={handleCopyCaption}
             id={`copy-caption-${clip.id}`}
           >
-            {copied ? '✅ Tersalin!' : '📋 Salin Caption'}
+            {copied ? '✅ Tersalin!' : '📋 Caption'}
+          </button>
+          <button
+            className={`${styles.actionBtn} ${styles.thumbBtn}`}
+            onClick={handleThumbnail}
+            disabled={generatingThumb}
+            id={`thumb-${clip.id}`}
+          >
+            {generatingThumb ? '⏳' : '📸 Thumb'}
           </button>
           <button
             className={`${styles.actionBtn} ${styles.editBtn}`}

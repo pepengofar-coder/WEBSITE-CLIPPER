@@ -6,10 +6,16 @@ import styles from './LinkInput.module.css';
 
 const PLATFORM_ICONS = {
   youtube: '▶️',
-  spotify: '🎵',
+  tiktok: '🎵',
+  instagram: '📸',
+  facebook: '👤',
+  twitter: '🐦',
+  vimeo: '🎬',
+  dailymotion: '📺',
+  spotify: '🎧',
   'apple-podcast': '🎙️',
   podcast: '🎙️',
-  generic: '🔗',
+  generic: '🌐',
 };
 
 export default function LinkInput() {
@@ -71,7 +77,7 @@ export default function LinkInput() {
           type="url"
           value={url}
           onChange={handleChange}
-          placeholder="Tempel link YouTube, Spotify, atau Podcast..."
+          placeholder="Tempel link dari YouTube, TikTok, Instagram, atau website apapun..."
           autoComplete="off"
           autoFocus
         />
