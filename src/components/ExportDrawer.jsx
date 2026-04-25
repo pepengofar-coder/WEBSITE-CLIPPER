@@ -25,10 +25,15 @@ export default function ExportDrawer() {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessingVideo, setIsProcessingVideo] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [exportError, setExportError] = useState(null);
+  const [exportPhase, setExportPhase] = useState(''); // Current phase label
   const fileInputRef = useRef(null);
 
-  // Simulated render progress
+  // Simulated render progress for metadata readiness
   const [renderProgress, setRenderProgress] = useState(0);
+
+  // Check browser compatibility
+  const ffmpegOk = isFFmpegSupported();
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -40,15 +45,15 @@ export default function ExportDrawer() {
     else setSubtitleReady(false);
   }, [exportingClip]);
 
-  // Simulate render progress
+  // Simulate metadata render progress
   useEffect(() => {
     if (!exportingClip) return;
     const interval = setInterval(() => {
       setRenderProgress(prev => {
         if (prev >= 100) { clearInterval(interval); setIsReady(true); return 100; }
-        return Math.min(prev + (prev < 80 ? 2 : 1), 100);
+        return Math.min(prev + (prev < 80 ? 3 : 1), 100);
       });
-    }, 80);
+    }, 60);
     return () => clearInterval(interval);
   }, [exportingClip]);
 
@@ -95,6 +100,9 @@ export default function ExportDrawer() {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('video/')) {
       setUploadedFile(file);
+      setExportError(null);
+    } else if (file) {
+      setExportError('File harus berformat video (MP4, MOV, WebM, AVI).');
     }
   };
 
@@ -106,14 +114,31 @@ export default function ExportDrawer() {
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('video/')) {
       setUploadedFile(file);
+      setExportError(null);
+    } else if (file) {
+      setExportError('File harus berformat video.');
     }
   };
 
   // ── Process & Download MP4 ──
   const handleProcessVideo = async () => {
     if (!uploadedFile) return;
+
     setIsProcessingVideo(true);
     setVideoProgress(0);
+    setExportError(null);
+
+    // Phase labels for UX
+    const phaseLabels = {
+      0: '📦 Memuat FFmpeg…',
+      15: '📦 FFmpeg siap',
+      18: '📂 Membaca file video…',
+      25: '📂 File video dimuat',
+      30: '⚙️ Memulai encoding H.264…',
+      90: '💾 Membaca output…',
+      98: '🧹 Membersihkan…',
+      100: '✅ Selesai!',
+    };
 
     try {
       const srt = exportingClip.subtitleSrt || '';
@@ -122,27 +147,48 @@ export default function ExportDrawer() {
         srt,
         exportingClip.startTime || 0,
         exportingClip.endTime || 0,
-        (progress) => setVideoProgress(progress)
+        (progress) => {
+          setVideoProgress(progress);
+          // Find the closest phase label
+          const keys = Object.keys(phaseLabels).map(Number).sort((a, b) => a - b);
+          const key = keys.reverse().find(k => progress >= k) || 0;
+          setExportPhase(phaseLabels[key]);
+        }
       );
 
-      const safeName = exportingClip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      // Validate the blob
+      if (!mp4Blob || mp4Blob.size < 1000) {
+        throw new Error('Output MP4 terlalu kecil — kemungkinan encoding gagal.');
+      }
+
+      const safeName = (exportingClip.title || 'clipforge-output')
+        .replace(/[^a-z0-9]/gi, '_')
+        .toLowerCase()
+        .substring(0, 40);
       downloadBlob(mp4Blob, `${safeName}_clipforge.mp4`);
 
       await actions.exportClip(exportingClip.id);
       dispatch({ type: 'SET_TOAST', payload: { message: '✅ Video MP4 berhasil diunduh!', type: 'success' } });
     } catch (err) {
       console.error('Video processing failed:', err);
-      dispatch({ type: 'SET_TOAST', payload: { message: `❌ Gagal memproses video: ${err.message}`, type: 'error' } });
+      setExportError(err.message || 'Terjadi kesalahan saat memproses video.');
+      dispatch({ type: 'SET_TOAST', payload: { message: `❌ Export gagal: ${err.message}`, type: 'error' } });
     } finally {
       setIsProcessingVideo(false);
+      setExportPhase('');
     }
   };
 
   // ── Download metadata package (without video) ──
   const handleDownloadMeta = async () => {
-    await actions.exportClip(exportingClip.id);
+    try {
+      await actions.exportClip(exportingClip.id);
+    } catch {}
 
-    const safeName = exportingClip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const safeName = (exportingClip.title || 'clipforge-output')
+      .replace(/[^a-z0-9]/gi, '_')
+      .toLowerCase()
+      .substring(0, 40);
     const zip = new JSZip();
 
     if (exportingClip.subtitleSrt) {
@@ -214,7 +260,11 @@ export default function ExportDrawer() {
               <div className={styles.specs}>
                 <div className={styles.specRow}>
                   <span className={styles.specLabel}>Format</span>
-                  <span className={styles.specValue}>MP4 / H.264</span>
+                  <span className={styles.specValue}>MP4 / H.264 + AAC</span>
+                </div>
+                <div className={styles.specRow}>
+                  <span className={styles.specLabel}>Resolusi</span>
+                  <span className={styles.specValue}>1080 × 1920 (9:16)</span>
                 </div>
                 <div className={styles.specRow}>
                   <span className={styles.specLabel}>Caption</span>
@@ -228,6 +278,12 @@ export default function ExportDrawer() {
                   <span className={styles.specLabel}>Subtitle</span>
                   <span className={`${styles.specValue} ${subtitleReady ? styles.specGreen : styles.specMuted}`}>
                     {subtitleReady ? `✅ ${exportingClip.subtitleLang?.toUpperCase() || 'SELESAI'}` : 'Belum dibuat'}
+                  </span>
+                </div>
+                <div className={styles.specRow}>
+                  <span className={styles.specLabel}>FFmpeg</span>
+                  <span className={`${styles.specValue} ${ffmpegOk ? styles.specGreen : ''}`}>
+                    {ffmpegOk ? '✅ Didukung' : '❌ Tidak didukung'}
                   </span>
                 </div>
               </div>
@@ -303,8 +359,17 @@ export default function ExportDrawer() {
               <div className={styles.subtitleSection}>
                 <div className={styles.subtitleHeader}>
                   <span className={styles.subtitleTitle}>🎬 Proses & Unduh Video MP4</span>
-                  <span className={styles.subtitleHint}>Upload file video, lalu FFmpeg akan memproses dengan caption tertanam</span>
+                  <span className={styles.subtitleHint}>
+                    Upload file video → FFmpeg memproses di browser → unduh MP4 dengan caption tertanam
+                  </span>
                 </div>
+
+                {/* Browser compatibility warning */}
+                {!ffmpegOk && (
+                  <div className={styles.errorBox}>
+                    ⚠️ Browser Anda tidak mendukung WebAssembly. Gunakan Chrome, Firefox, atau Edge versi terbaru.
+                  </div>
+                )}
 
                 {/* Upload zone */}
                 <div
@@ -317,7 +382,7 @@ export default function ExportDrawer() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="video/*"
+                    accept="video/mp4,video/quicktime,video/webm,video/avi,video/x-matroska,video/*"
                     onChange={handleFileSelect}
                     style={{ display: 'none' }}
                     id="video-upload-input"
@@ -327,6 +392,7 @@ export default function ExportDrawer() {
                       <span className={styles.uploadIcon}>✅</span>
                       <span className={styles.uploadName}>{uploadedFile.name}</span>
                       <span className={styles.uploadSize}>({(uploadedFile.size / 1024 / 1024).toFixed(1)} MB)</span>
+                      <span className={styles.uploadHint}>Klik lagi untuk ganti file</span>
                     </div>
                   ) : (
                     <div className={styles.uploadInfo}>
@@ -341,27 +407,39 @@ export default function ExportDrawer() {
                 {isProcessingVideo && (
                   <div className={styles.videoProgressWrap}>
                     <div className={styles.progressLabel}>
-                      <span>⚙️ Memproses video dengan caption...</span>
+                      <span>{exportPhase || '⚙️ Memproses video…'}</span>
                       <span className={styles.progressPercent}>{videoProgress}%</span>
                     </div>
                     <div className={styles.progressBar}>
                       <div className={styles.progressFill} style={{ width: `${videoProgress}%` }} />
                     </div>
+                    <p className={styles.progressHint}>
+                      Proses encoding berjalan di browser. Jangan tutup tab ini.
+                    </p>
+                  </div>
+                )}
+
+                {/* Error display */}
+                {exportError && (
+                  <div className={styles.errorBox}>
+                    ❌ {exportError}
                   </div>
                 )}
 
                 {/* Process MP4 button */}
                 <button
-                  className={`${styles.downloadBtn} ${uploadedFile && isReady ? styles.ready : styles.pending}`}
-                  onClick={uploadedFile && isReady ? handleProcessVideo : undefined}
-                  disabled={!uploadedFile || !isReady || isProcessingVideo}
+                  className={`${styles.downloadBtn} ${uploadedFile && isReady && ffmpegOk ? styles.ready : styles.pending}`}
+                  onClick={uploadedFile && isReady && ffmpegOk ? handleProcessVideo : undefined}
+                  disabled={!uploadedFile || !isReady || isProcessingVideo || !ffmpegOk}
                   id="process-video-btn"
                 >
                   {isProcessingVideo
-                    ? `⏳ Memproses... ${videoProgress}%`
-                    : uploadedFile
-                      ? '🎬 Proses & Unduh MP4 dengan Caption'
-                      : '📁 Upload video dulu untuk proses MP4'}
+                    ? `⏳ Memproses… ${videoProgress}%`
+                    : !ffmpegOk
+                      ? '⚠️ FFmpeg tidak didukung browser ini'
+                      : uploadedFile
+                        ? '🎬 Proses & Unduh MP4 dengan Caption'
+                        : '📁 Upload video dulu untuk proses MP4'}
                 </button>
               </div>
 
@@ -374,7 +452,7 @@ export default function ExportDrawer() {
               >
                 {isReady
                   ? '📦 Unduh Caption + SRT (.zip)'
-                  : '⏳ Memproses...'}
+                  : '⏳ Mempersiapkan…'}
               </button>
             </div>
           </motion.div>
