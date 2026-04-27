@@ -54,8 +54,8 @@ export default function Footer() {
           </div>
           <div className={styles.footerCol}>
             <h4 className={styles.footerColTitle}>Support</h4>
-            <a href="mailto:support@clipforge.id" className={styles.footerLink}>
-              <Mail size={14} /> support@clipforge.id
+            <a href="mailto:support@youklip.id" className={styles.footerLink}>
+              <Mail size={14} /> support@youklip.id
             </a>
             <a href="#" className={styles.footerLink}>
               <ExternalLink size={14} /> Help Center
@@ -77,7 +77,7 @@ export default function Footer() {
       </div>
 
       <div className={styles.footerBottom}>
-        <span>© 2026 ClipForge. All rights reserved.</span>
+        <span>© 2026 YouKlip. All rights reserved.</span>
         <span>Made with ❤️ in Indonesia</span>
       </div>
     </footer>

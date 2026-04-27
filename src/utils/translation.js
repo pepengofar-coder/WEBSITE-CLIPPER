@@ -1,5 +1,5 @@
 /**
- * Translation utility for ClipForge
+ * Translation utility for YouKlip
  * Uses LibreTranslate (free/open-source) as primary, with a mock fallback.
  * Supports Arabic as source language.
  */

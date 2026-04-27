@@ -244,6 +244,90 @@
   font-weight: 500;
 }
 
+/* Advanced Settings */
+.advancedSection {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.advancedToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.advancedToggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.advancedContent {
+  overflow: hidden;
+}
+
+.advancedGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+.advControl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.advControl label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.advControl select {
+  padding: 6px 8px;
+  background: var(--bg-input);
+  border: var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.advControl select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.stepBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--bg-surface);
+  color: var(--accent-primary-light);
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  display: inline-block;
+}
+
+.stepHelper {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
 /* Footer */
 .modalFooter {
   display: flex;

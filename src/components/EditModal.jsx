@@ -12,8 +12,11 @@ export default function EditModal() {
   const [startTime, setStartTime] = useState(selectedClip?.startTime || 0);
   const [endTime, setEndTime] = useState(selectedClip?.endTime || 60);
   const [captionStyle, setCaptionStyle] = useState(selectedClip?.captionStyle || 'bold-pop');
+  const [speed, setSpeed] = useState('1x');
+  const [crop, setCrop] = useState('9:16');
   const [isPlaying, setIsPlaying] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -28,6 +31,8 @@ export default function EditModal() {
       startTime,
       endTime,
       captionStyle,
+      speed,
+      crop,
       duration: endTime - startTime,
     };
     await actions.saveClipEdit(selectedClip.id, updates);
@@ -69,11 +74,15 @@ export default function EditModal() {
           transition={{ duration: 0.3, ease: 'easeOut' }}
         >
           {/* Header */}
-          <div className={styles.modalHeader}>
-            <h3 className={styles.modalTitle}>
-              ✏️ Edit Klip — "{selectedClip.title}"
+          <div className={styles.modalHeader} style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+            <span className={styles.stepBadge}>Langkah 2</span>
+            <h3 className={styles.modalTitle} style={{ margin: '8px 0 4px 0' }}>
+              Potong & Sesuaikan
             </h3>
-            <button className={styles.closeBtn} onClick={handleClose} aria-label="Tutup">
+            <p className={styles.stepHelper} style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
+              Pilih bagian terbaik dan sesuaikan klip "{selectedClip.title}"
+            </p>
+            <button className={styles.closeBtn} onClick={handleClose} aria-label="Tutup" style={{ position: 'absolute', top: 0, right: 0 }}>
               ✕
             </button>
           </div>
@@ -148,6 +157,48 @@ export default function EditModal() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Advanced Settings */}
+            <div className={styles.advancedSection}>
+              <button 
+                className={styles.advancedToggle} 
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                <span>⚙️ Pengaturan Lanjutan</span>
+                <span className={styles.toggleIcon}>{showAdvanced ? '▲' : '▼'}</span>
+              </button>
+              
+              <AnimatePresence>
+                {showAdvanced && (
+                  <motion.div 
+                    className={styles.advancedContent}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                  >
+                    <div className={styles.advancedGrid}>
+                      <div className={styles.advControl}>
+                        <label>Kecepatan</label>
+                        <select value={speed} onChange={e => setSpeed(e.target.value)}>
+                          <option value="0.5x">0.5x (Lambat)</option>
+                          <option value="1x">1x (Normal)</option>
+                          <option value="1.5x">1.5x (Cepat)</option>
+                          <option value="2x">2x (Sangat Cepat)</option>
+                        </select>
+                      </div>
+                      <div className={styles.advControl}>
+                        <label>Rasio (Crop)</label>
+                        <select value={crop} onChange={e => setCrop(e.target.value)}>
+                          <option value="9:16">9:16 (TikTok/Reels)</option>
+                          <option value="16:9">16:9 (YouTube)</option>
+                          <option value="1:1">1:1 (Instagram Post)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

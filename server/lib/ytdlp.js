@@ -1,5 +1,5 @@
 /**
- * yt-dlp wrapper for ClipForge backend.
+ * yt-dlp wrapper for YouKlip backend.
  *
  * Requires yt-dlp to be installed and available in PATH.
  * Install: winget install yt-dlp (Windows) or pip install yt-dlp (cross-platform)

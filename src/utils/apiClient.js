@@ -1,19 +1,19 @@
 /**
- * API Client for ClipForge Backend
+ * API Client for YouKlip Backend
  *
  * Connects the React frontend to the Express backend for:
  * - URL validation (yt-dlp metadata)
  * - MP4 export (server-side download + ffmpeg)
  */
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 /**
  * Check if the backend server is reachable.
  */
 export async function checkHealth() {
   try {
-    const res = await fetch(`${BACKEND_URL}/health`, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(5000) });
     const data = await res.json();
     return data.ok === true;
   } catch {
@@ -28,7 +28,7 @@ export async function checkHealth() {
  * @returns {Promise<object>} - { ok, isSupported, platform, title, duration, thumbnail, ... }
  */
 export async function checkUrl(sourceUrl) {
-  const res = await fetch(`${BACKEND_URL}/api/check-url`, {
+  const res = await fetch(`${API_BASE_URL}/api/check-url`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sourceUrl }),
@@ -57,20 +57,41 @@ export async function checkUrl(sourceUrl) {
  * @returns {Promise<object>} - { ok, filename, size, downloadUrl }
  */
 export async function exportMp4({ sourceUrl, title, startTime, endTime, quality = '720p', withSubtitles = false }) {
-  const res = await fetch(`${BACKEND_URL}/api/export-mp4`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sourceUrl, title, startTime, endTime, quality, withSubtitles }),
-    signal: AbortSignal.timeout(300_000), // 5 min timeout for video processing
-  });
-
-  const data = await res.json();
-
-  if (!res.ok || !data.ok) {
-    throw new Error(data.error || 'Gagal mengekspor video.');
+  console.log('[Export] API_BASE_URL:', API_BASE_URL);
+  console.log('[Export] payload:', { sourceUrl, title, startTime, endTime, quality, withSubtitles });
+  
+  const isHealthy = await checkHealth();
+  if (!isHealthy) {
+    throw new Error('Backend server is not running. Start backend or configure VITE_API_BASE_URL.');
   }
 
-  return data;
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/export-mp4`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sourceUrl, title, startTime, endTime, quality, withSubtitles }),
+      signal: AbortSignal.timeout(180_000), // 3 min timeout
+    });
+
+    const data = await res.json();
+    console.log('[Export] server response:', data);
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || 'Export gagal');
+    }
+
+    if (!data.downloadUrl) {
+      throw new Error('Download URL tidak diterima dari server');
+    }
+
+    console.log('[Export] downloadUrl:', data.downloadUrl);
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+      throw new Error('Server terlalu lama memproses video. Coba clip yang lebih pendek atau kualitas 720p.');
+    }
+    throw err;
+  }
 }
 
 /**
@@ -79,7 +100,7 @@ export async function exportMp4({ sourceUrl, title, startTime, endTime, quality 
 export function triggerDownload(url, filename) {
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename || 'clipforge-output.mp4';
+  a.download = filename || 'youklip-output.mp4';
   a.style.display = 'none';
   document.body.appendChild(a);
   requestAnimationFrame(() => {

@@ -1,5 +1,5 @@
 /**
- * FFmpeg wrapper for ClipForge backend.
+ * FFmpeg wrapper for YouKlip backend.
  *
  * Requires ffmpeg to be installed and available in PATH.
  * Install: winget install ffmpeg (Windows) or apt install ffmpeg (Linux)
@@ -72,7 +72,7 @@ export async function trimVideo(inputPath, outputPath, startTime, endTime, optio
     '-c:a', 'aac',
     '-b:a', '128k',
     '-movflags', '+faststart',     // Progressive playback
-    '-metadata', 'title=ClipForge Export',
+    '-metadata', 'title=YouKlip Export',
     outputPath,
   ];
 

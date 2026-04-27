@@ -1,4 +1,4 @@
-// Data dan utilitas untuk ClipForge (Bahasa Indonesia)
+// Data dan utilitas untuk YouKlip (Bahasa Indonesia)
 
 export const PROCESSING_STEPS = [
   { id: 1, label: 'Mengunduh audio', icon: '📥' },

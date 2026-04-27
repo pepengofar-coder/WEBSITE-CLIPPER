@@ -26,6 +26,8 @@ export default function ExportDrawer() {
   const [exportError, setExportError] = useState(null);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [quality, setQuality] = useState('720p');
+  const [fps, setFps] = useState('30');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Simulated render progress for metadata readiness
   const [renderProgress, setRenderProgress] = useState(0);
@@ -93,6 +95,8 @@ export default function ExportDrawer() {
     dispatch({ type: 'SET_TOAST', payload: { message: '✅ Link klip tersalin!', type: 'success' } });
   };
 
+  const [downloadUrl, setDownloadUrl] = useState(null);
+
   // ── Main export handler: 1-click backend download ──
   const handleExportMP4 = async () => {
     if (!clipSourceUrl) {
@@ -103,14 +107,17 @@ export default function ExportDrawer() {
     setIsExporting(true);
     setExportError(null);
     setExportSuccess(false);
+    setDownloadUrl(null);
 
-    console.log('[ExportDrawer] Exporting via backend:', {
-      videoId: exportingClip.id || sourceInfo?.videoId,
+    console.log('[Export] request payload:', {
       sourceUrl: clipSourceUrl,
-      thumbnailUrl: exportingClip.thumbnailUrl || sourceInfo?.thumbnail,
+      title: exportingClip.title,
       startTime: exportingClip.startTime,
       endTime: exportingClip.endTime,
+      quality,
+      fps,
       subtitleLang: selectedLang,
+      withSubtitles: subtitleReady,
     });
 
     try {
@@ -120,26 +127,30 @@ export default function ExportDrawer() {
         startTime: exportingClip.startTime || 0,
         endTime: exportingClip.endTime || 0,
         quality,
+        fps,
         withSubtitles: subtitleReady,
+        subtitleLang: selectedLang,
       });
 
-      console.log('[ExportDrawer] ✅ Export complete:', {
-        downloadUrl: result.downloadUrl,
-        outputSize: result.size
-      });
+      console.log('[Export] server response:', result);
+      console.log('[Export] downloadUrl:', result.downloadUrl);
 
-      // Trigger download
-      triggerDownload(result.downloadUrl, result.filename);
+      // Trigger download immediately using triggerDownload
+      triggerDownload(result.downloadUrl, result.filename || 'youklip-output.mp4');
 
       await actions.exportClip(exportingClip.id);
+      
+      // Update states
       setExportSuccess(true);
-      dispatch({ type: 'SET_TOAST', payload: { message: '✅ Video MP4 berhasil diunduh!', type: 'success' } });
+      setIsExporting(false);
+      setDownloadUrl(result.downloadUrl);
+      dispatch({ type: 'SET_TOAST', payload: { message: '✅ MP4 berhasil dibuat!', type: 'success' } });
+      
     } catch (err) {
       console.error('[ExportDrawer] ❌ Export failed:', err);
       setExportError(err.message || 'Gagal mengekspor video.');
-      dispatch({ type: 'SET_TOAST', payload: { message: `❌ Export gagal: ${err.message}`, type: 'error' } });
-    } finally {
       setIsExporting(false);
+      dispatch({ type: 'SET_TOAST', payload: { message: `❌ Export gagal: ${err.message}`, type: 'error' } });
     }
   };
 
@@ -149,7 +160,7 @@ export default function ExportDrawer() {
       await actions.exportClip(exportingClip.id);
     } catch {}
 
-    const safeName = (exportingClip.title || 'clipforge-output')
+    const safeName = (exportingClip.title || 'youklip-output')
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase()
       .substring(0, 40);
@@ -175,11 +186,11 @@ export default function ExportDrawer() {
       sourceUrl: clipSourceUrl,
       sourceTitle: exportingClip.sourceTitle,
       platform: exportingClip.platform,
-      dibuatOleh: 'ClipForge AI',
+      dibuatOleh: 'YouKlip AI',
     }, null, 2));
 
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-    downloadBlob(zipBlob, `${safeName}_clipforge.zip`);
+    downloadBlob(zipBlob, `${safeName}_youklip.zip`);
     handleClose();
   };
 
@@ -213,11 +224,15 @@ export default function ExportDrawer() {
             <div className={styles.handle} />
 
             {/* Header */}
-            <div className={styles.drawerHeader}>
-              <h3 className={styles.drawerTitle}>
-                📥 Ekspor — "{exportingClip.title}"
+            <div className={styles.drawerHeader} style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+              <span className={styles.stepBadge}>Langkah 3</span>
+              <h3 className={styles.drawerTitle} style={{ margin: '8px 0 4px 0' }}>
+                Ekspor & Download
               </h3>
-              <button className={styles.closeBtn} onClick={handleClose} aria-label="Tutup">✕</button>
+              <p className={styles.stepHelper} style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
+                Pilih format dan unduh klip "{exportingClip.title}"
+              </p>
+              <button className={styles.closeBtn} onClick={handleClose} aria-label="Tutup" style={{ position: 'absolute', top: 16, right: 16 }}>✕</button>
             </div>
 
             {/* Scrollable body */}
@@ -336,12 +351,44 @@ export default function ExportDrawer() {
                 {/* Quality selector */}
                 <div className={styles.subtitleControls} style={{ marginBottom: '4px' }}>
                   <div className={styles.langGroup}>
-                    <label className={styles.langLabel}>Kualitas</label>
+                    <label className={styles.langLabel}>Kualitas Resolusi</label>
                     <select className={styles.langSelect} value={quality} onChange={e => setQuality(e.target.value)} id="quality-select">
-                      <option value="720p">720p (Cepat)</option>
-                      <option value="1080p">1080p (HD)</option>
+                      <option value="720p">720p (Cepat, Ringan)</option>
+                      <option value="1080p">1080p (HD, Jernih)</option>
                     </select>
                   </div>
+                </div>
+
+                {/* Advanced Settings */}
+                <div className={styles.advancedSection} style={{ marginBottom: '16px', marginTop: '8px' }}>
+                  <button 
+                    className={styles.advancedToggle} 
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                  >
+                    <span>⚙️ Pengaturan Lanjutan (FPS)</span>
+                    <span className={styles.toggleIcon}>{showAdvanced ? '▲' : '▼'}</span>
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showAdvanced && (
+                      <motion.div 
+                        className={styles.advancedContent}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                      >
+                        <div className={styles.advancedGrid}>
+                          <div className={styles.advControl}>
+                            <label className={styles.langLabel}>Frame Rate (FPS)</label>
+                            <select className={styles.langSelect} value={fps} onChange={e => setFps(e.target.value)}>
+                              <option value="30">30 FPS (Standar)</option>
+                              <option value="60">60 FPS (Sangat Mulus)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Exporting state */}
@@ -383,9 +430,20 @@ export default function ExportDrawer() {
                   {isExporting
                     ? '⏳ Memproses di server...'
                     : exportSuccess
-                      ? '🔄 Download Ulang MP4'
+                      ? '🔄 Render Ulang MP4'
                       : '🎬 Download MP4'}
                 </button>
+                
+                {exportSuccess && downloadUrl && (
+                  <a
+                    href={downloadUrl}
+                    className={`${styles.downloadBtn} ${styles.readyAlt}`}
+                    style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '8px' }}
+                    download
+                  >
+                    ⬇️ Download Lagi (Fallback)
+                  </a>
+                )}
               </div>
 
               {/* Quick download metadata (tanpa video) */}

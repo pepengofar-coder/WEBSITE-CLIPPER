@@ -1,5 +1,5 @@
 /**
- * ClipForge Backend Server
+ * YouKlip Backend Server
  *
  * Express server providing:
  * - GET  /health          → Health check
@@ -39,7 +39,26 @@ const MAX_FILE_AGE_MS = 60 * 60 * 1000; // 1 hour
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors());
+
+// Configure CORS for local dev and Vercel production
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json({ limit: '1mb' }));
 
 // ── Serve output files ──
@@ -47,6 +66,8 @@ app.use('/outputs', express.static(OUTPUTS_DIR, {
   setHeaders(res) {
     res.set('Content-Type', 'video/mp4');
     res.set('Content-Disposition', 'attachment');
+    // Enable CORS for outputs so frontend can download it
+    res.set('Access-Control-Allow-Origin', '*');
   },
 }));
 
@@ -54,6 +75,7 @@ app.use('/outputs', express.static(OUTPUTS_DIR, {
 // GET /health
 // ══════════════════════════════════════════════
 app.get('/health', (_req, res) => {
+  console.log('[Health] OK');
   res.json({ ok: true, timestamp: new Date().toISOString() });
 });
 
@@ -133,7 +155,10 @@ app.post('/api/check-url', async (req, res) => {
 // POST /api/export-mp4
 // ══════════════════════════════════════════════
 app.post('/api/export-mp4', async (req, res) => {
-  const { sourceUrl, title, startTime = 0, endTime, quality = '720p', withSubtitles = false } = req.body;
+  const { sourceUrl, title, startTime = 0, endTime, quality = '720p', subtitleLang, withSubtitles = false } = req.body;
+
+  console.log('[Export] started');
+  console.log('[Export] sourceUrl:', sourceUrl);
 
   // ── Validate inputs ──
   if (!sourceUrl || typeof sourceUrl !== 'string') {
@@ -159,12 +184,12 @@ app.post('/api/export-mp4', async (req, res) => {
   }
 
   const jobId = randomUUID().substring(0, 8);
-  const safeName = (title || 'clipforge-output')
+  const safeName = (title || 'youklip-output')
     .replace(/[^a-z0-9\s]/gi, '')
     .replace(/\s+/g, '-')
     .toLowerCase()
     .substring(0, 40);
-  const outputFilename = `clipforge-${safeName}-${jobId}.mp4`;
+  const outputFilename = `youklip-${safeName}-${jobId}.mp4`;
   const downloadPath = join(TEMP_DIR, `download-${jobId}.mp4`);
   const outputPath = join(OUTPUTS_DIR, outputFilename);
 
@@ -202,6 +227,7 @@ app.post('/api/export-mp4', async (req, res) => {
     const downloadUrl = `${baseUrl}/outputs/${outputFilename}`;
 
     console.log(`[export] ✅ Job ${jobId} complete: ${outputFilename} (${(result.size / 1024 / 1024).toFixed(2)} MB)`);
+    console.log('[Export] output:', downloadUrl);
 
     return res.json({
       ok: true,
@@ -266,7 +292,7 @@ app.use((err, _req, res, _next) => {
 // Start
 // ══════════════════════════════════════════════
 app.listen(PORT, () => {
-  console.log(`\n🚀 ClipForge Backend running on http://localhost:${PORT}`);
+  console.log(`\n🚀 YouKlip Backend running on http://localhost:${PORT}`);
   console.log(`   Health:    GET  http://localhost:${PORT}/health`);
   console.log(`   Check URL: POST http://localhost:${PORT}/api/check-url`);
   console.log(`   Export:    POST http://localhost:${PORT}/api/export-mp4`);

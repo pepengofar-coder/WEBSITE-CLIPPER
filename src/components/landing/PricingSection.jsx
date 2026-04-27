@@ -11,7 +11,7 @@ const plans = [
     features: [
       '3 klip per hari',
       'Durasi video maks 10 menit',
-      'Watermark ClipForge',
+      'Watermark YouKlip',
       'Export 720p',
       'Auto subtitle dasar',
     ],

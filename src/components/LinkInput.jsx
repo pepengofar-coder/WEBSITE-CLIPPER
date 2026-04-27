@@ -68,7 +68,7 @@ export default function LinkInput() {
       } else {
         // Backend might be down — fallback to client-side detection only
         console.warn('[LinkInput] Backend check failed:', err.message);
-        setError('Backend tidak tersedia. Pastikan server berjalan di localhost:3001.');
+        setError('Backend server is not running. Start backend or configure VITE_API_BASE_URL.');
       }
     } finally {
       setIsChecking(false);
@@ -135,8 +135,14 @@ export default function LinkInput() {
   };
 
   return (
-    <form className={styles.linkInputWrapper} onSubmit={handleSubmit}>
-      <div className={styles.inputContainer}>
+    <div className={styles.stepContainer}>
+      <div className={styles.stepHeader}>
+        <span className={styles.stepBadge}>Langkah 1</span>
+        <h2 className={styles.stepTitle}>Pilih Video</h2>
+        <p className={styles.stepHelper}>Upload video Anda atau paste link YouTube/TikTok</p>
+      </div>
+      <form className={styles.linkInputWrapper} onSubmit={handleSubmit}>
+        <div className={styles.inputContainer}>
         {platform ? (
           <span className={styles.platformIcon}>
             {PLATFORM_ICONS[platform] || PLATFORM_ICONS.generic}
@@ -200,6 +206,7 @@ export default function LinkInput() {
       )}
 
       {error && <p className={styles.errorMsg}>{error}</p>}
-    </form>
+      </form>
+    </div>
   );
 }

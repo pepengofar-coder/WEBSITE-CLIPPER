@@ -45,7 +45,7 @@ export default function BenefitsSection() {
       >
         <span className={styles.sectionBadge}>Keunggulan</span>
         <h2 className={styles.sectionTitle}>
-          Kenapa <span className={styles.gradientText}>ClipForge</span>?
+          Kenapa <span className={styles.gradientText}>YouKlip</span>?
         </h2>
         <p className={styles.sectionSubtitle}>
           Toolkit lengkap untuk content creator yang ingin scale up produksi konten tanpa effort ekstra.

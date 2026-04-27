@@ -41,15 +41,13 @@ export default function HeroSection() {
         </motion.span>
 
         <h1 className={styles.heroTitle}>
-          Ubah Video Panjang Jadi{' '}
-          <span className={styles.heroGradientText}>Klip Viral</span>{' '}
-          Secara Otomatis dengan AI
+          Pemotong Video Online Gratis{' '}
+          <span className={styles.heroGradientText}>(Tanpa Watermark)</span>
         </h1>
 
         <p className={styles.heroSubtitle}>
-          Tempel link video, AI kami akan mendeteksi momen viral terbaik, 
-          memotong jadi klip pendek siap upload ke TikTok, Reels & YouTube Shorts — 
-          lengkap dengan subtitle dan auto-reframe.
+          Potong video dalam hitungan detik — tanpa perlu daftar.
+          Tempel link video atau upload, dan dapatkan klip Anda dengan instan.
         </p>
 
         <motion.div
@@ -74,7 +72,7 @@ export default function HeroSection() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.5 }}
         >
-          ✓ Tanpa kartu kredit &nbsp;·&nbsp; ✓ Gratis 3 klip/hari &nbsp;·&nbsp; ✓ Setup instan
+          ✓ Tanpa watermark &nbsp;·&nbsp; ✓ Tanpa signup &nbsp;·&nbsp; ✓ Gratis sepenuhnya
         </motion.p>
       </motion.div>
     </section>

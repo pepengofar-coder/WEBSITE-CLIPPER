@@ -5,6 +5,49 @@
   position: relative;
 }
 
+.stepContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.stepHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+}
+
+.stepBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--bg-surface);
+  color: var(--accent-primary-light);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.stepTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stepHelper {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 .inputContainer {
   display: flex;
   align-items: center;

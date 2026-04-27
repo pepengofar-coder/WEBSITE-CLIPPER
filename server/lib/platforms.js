@@ -1,5 +1,5 @@
 /**
- * Platform detection and URL normalization for ClipForge backend.
+ * Platform detection and URL normalization for YouKlip backend.
  */
 
 const PLATFORM_PATTERNS = [
