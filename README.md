@@ -1,16 +1,23 @@
-# React + Vite
+# Zenira
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Clip smarter, not harder**
 
-Currently, two official plugins are available:
+Smart video clipping platform — extract highlights from videos quickly with AI-powered processing.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech Stack
 
-## React Compiler
+- **Frontend**: React + Vite
+- **Styling**: CSS Modules + CSS Custom Properties
+- **Animations**: Framer Motion
+- **Backend**: Node.js + Express (server/)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting Started
 
-## Expanding the ESLint configuration
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Brand
+
+Brand identity assets are in the `brand/` directory — logo, favicon, and design guidelines.
