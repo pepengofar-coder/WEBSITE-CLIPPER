@@ -37,17 +37,17 @@ export default function HeroSection() {
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <Sparkles size={14} />
-          Generator Klip Bertenaga AI
+          AI-Powered Video Clipping
         </motion.span>
 
         <h1 className={styles.heroTitle}>
-          Pemotong Video Online Gratis{' '}
-          <span className={styles.heroGradientText}>(Tanpa Watermark)</span>
+          Clip Smarter,{' '}
+          <span className={styles.heroGradientText}>Not Harder</span>
         </h1>
 
         <p className={styles.heroSubtitle}>
-          Potong video dalam hitungan detik — tanpa perlu daftar.
-          Tempel link video atau upload, dan dapatkan klip Anda dengan instan.
+          Potong dan ekstrak highlight dari video dalam hitungan detik.
+          Tempel link atau upload — dapatkan klip sempurna dengan instan.
         </p>
 
         <motion.div
@@ -58,7 +58,7 @@ export default function HeroSection() {
         >
           <a href="#hero-input" className={styles.ctaPrimary}>
             <Sparkles size={18} />
-            Coba Gratis Sekarang
+            Mulai Clip Sekarang
           </a>
           <button onClick={scrollToDemo} className={styles.ctaSecondary}>
             <Play size={16} />
@@ -72,7 +72,7 @@ export default function HeroSection() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.5 }}
         >
-          ✓ Tanpa watermark &nbsp;·&nbsp; ✓ Tanpa signup &nbsp;·&nbsp; ✓ Gratis sepenuhnya
+          ✓ Tanpa watermark &nbsp;·&nbsp; ✓ Tanpa signup &nbsp;·&nbsp; ✓ AI-powered
         </motion.p>
       </motion.div>
     </section>

@@ -1,5 +1,5 @@
 /**
- * API Client for YouKlip Backend
+ * API Client for Zenira Backend
  *
  * Connects the React frontend to the Express backend for:
  * - URL validation (yt-dlp metadata)
@@ -100,7 +100,7 @@ export async function exportMp4({ sourceUrl, title, startTime, endTime, quality 
 export function triggerDownload(url, filename) {
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename || 'youklip-output.mp4';
+  a.download = filename || 'Zenira-output.mp4';
   a.style.display = 'none';
   document.body.appendChild(a);
   requestAnimationFrame(() => {

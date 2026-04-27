@@ -8,13 +8,13 @@ export default function Footer() {
         {/* Brand */}
         <div className={styles.footerBrand}>
           <div className={styles.footerLogo}>
-            <span className={styles.footerLogoIcon}>🎬</span>
+            <span className={styles.footerLogoIcon}>✦</span>
             <span className={styles.footerLogoText}>
-              Clip<span className={styles.footerLogoAccent}>Forge</span>
+              Zen<span className={styles.footerLogoAccent}>ira</span>
             </span>
           </div>
           <p className={styles.footerBrandDesc}>
-            Generator klip viral bertenaga AI. Ubah video panjang jadi konten pendek siap upload dalam hitungan menit.
+            Smart video clipping platform. Clip smarter, not harder — ekstrak highlight dari video dalam hitungan detik.
           </p>
           <div className={styles.footerSocials}>
             <a href="#" className={styles.footerSocial} aria-label="Twitter">
@@ -54,8 +54,8 @@ export default function Footer() {
           </div>
           <div className={styles.footerCol}>
             <h4 className={styles.footerColTitle}>Support</h4>
-            <a href="mailto:support@youklip.id" className={styles.footerLink}>
-              <Mail size={14} /> support@youklip.id
+            <a href="mailto:support@zenira.app" className={styles.footerLink}>
+              <Mail size={14} /> support@zenira.app
             </a>
             <a href="#" className={styles.footerLink}>
               <ExternalLink size={14} /> Help Center
@@ -77,7 +77,7 @@ export default function Footer() {
       </div>
 
       <div className={styles.footerBottom}>
-        <span>© 2026 YouKlip. All rights reserved.</span>
+        <span>© 2026 Zenira. All rights reserved.</span>
         <span>Made with ❤️ in Indonesia</span>
       </div>
     </footer>

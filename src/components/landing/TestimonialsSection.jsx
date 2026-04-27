@@ -9,7 +9,7 @@ const testimonials = [
     avatar: null,
     initials: 'RM',
     color: '#ec4899',
-    quote: 'YouKlip bikin saya hemat 5 jam editing setiap hari. Tinggal tempel link podcast, langsung dapat 10+ klip viral. Gila sih ini!',
+    quote: 'Zenira bikin saya hemat 5 jam editing setiap hari. Tinggal tempel link podcast, langsung dapat 10+ klip viral. Gila sih ini!',
     rating: 5,
   },
   {
@@ -18,7 +18,7 @@ const testimonials = [
     avatar: null,
     initials: 'AP',
     color: '#3b82f6',
-    quote: 'Dulu ngedit 1 video bisa seharian. Sekarang dengan YouKlip, client saya makin banyak karena output-nya bisa 3x lipat. Auto subtitle-nya juga akurat banget.',
+    quote: 'Dulu ngedit 1 video bisa seharian. Sekarang dengan Zenira, client saya makin banyak karena output-nya bisa 3x lipat. Auto subtitle-nya juga akurat banget.',
     rating: 5,
   },
   {
@@ -27,7 +27,7 @@ const testimonials = [
     avatar: null,
     initials: 'SD',
     color: '#10b981',
-    quote: 'Kami manage 15 akun klien. YouKlip jadi senjata rahasia tim kami buat scaling konten tanpa tambah headcount. ROI-nya langsung terasa.',
+    quote: 'Kami manage 15 akun klien. Zenira jadi senjata rahasia tim kami buat scaling konten tanpa tambah headcount. ROI-nya langsung terasa.',
     rating: 5,
   },
 ];
@@ -48,7 +48,7 @@ export default function TestimonialsSection() {
           <span className={styles.gradientText}>1000+ Creator</span>
         </h2>
         <p className={styles.sectionSubtitle}>
-          Dengar langsung dari mereka yang sudah merasakan manfaat YouKlip.
+          Dengar langsung dari mereka yang sudah merasakan manfaat Zenira.
         </p>
       </motion.div>
 

@@ -1,5 +1,5 @@
 /**
- * Video Processor for YouKlip
+ * Video Processor for Zenira
  *
  * Uses FFmpeg.wasm to process video with burned-in captions in the browser.
  * Lazy-loads FFmpeg only when needed.
@@ -123,14 +123,14 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
 
   // ── Phase 0  (0–15 %): Load FFmpeg ──
   report(0);
-  console.log('[YouKlip Export] Memulai proses export MP4...');
-  console.log('[YouKlip Export] Input file:', videoFile.name || 'blob', '| Size:', (videoFile.size / 1024 / 1024).toFixed(2), 'MB');
-  console.log('[YouKlip Export] Trim:', startTime, '->', endTime, 'detik');
+  console.log('[Zenira Export] Memulai proses export MP4...');
+  console.log('[Zenira Export] Input file:', videoFile.name || 'blob', '| Size:', (videoFile.size / 1024 / 1024).toFixed(2), 'MB');
+  console.log('[Zenira Export] Trim:', startTime, '->', endTime, 'detik');
 
   const logs = [];
   const ffmpeg = await loadFFmpeg((msg) => logs.push(msg));
   report(15);
-  console.log('[YouKlip Export] FFmpeg berhasil dimuat');
+  console.log('[Zenira Export] FFmpeg berhasil dimuat');
 
   // ── Phase 1  (15–25 %): Write input files ──
   const { fetchFile } = await import('@ffmpeg/util');
@@ -143,7 +143,7 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
     throw new Error(`Gagal membaca file video: ${err.message}`);
   }
 
-  console.log('[YouKlip Export] Video data loaded, size:', videoData.byteLength, 'bytes');
+  console.log('[Zenira Export] Video data loaded, size:', videoData.byteLength, 'bytes');
 
   if (!videoData || videoData.byteLength < 1000) {
     throw new Error('File video terlalu kecil atau kosong. Pastikan file video valid.');
@@ -151,7 +151,7 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
 
   await ffmpeg.writeFile('input.mp4', videoData);
   report(25);
-  console.log('[YouKlip Export] File ditulis ke virtual filesystem');
+  console.log('[Zenira Export] File ditulis ke virtual filesystem');
 
   // ── Phase 2  (25–30 %): Build command ──
   // IMPORTANT: Place -ss BEFORE -i for fast seeking (input-level seeking)
@@ -202,7 +202,7 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
   );
 
   report(30);
-  console.log('[YouKlip Export] FFmpeg command:', ['ffmpeg', ...args].join(' '));
+  console.log('[Zenira Export] FFmpeg command:', ['ffmpeg', ...args].join(' '));
 
   // ── Phase 3  (30–90 %): Execute FFmpeg ──
   const progressHandler = ({ progress }) => {
@@ -216,14 +216,14 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
   } catch (err) {
     ffmpeg.off('progress', progressHandler);
     const tail = logs.slice(-10).join('\n');
-    console.error('[YouKlip Export] FFmpeg exec gagal:', err);
-    console.error('[YouKlip Export] Log terakhir:\n', tail);
+    console.error('[Zenira Export] FFmpeg exec gagal:', err);
+    console.error('[Zenira Export] Log terakhir:\n', tail);
     throw new Error(`FFmpeg gagal: ${err.message}\n\nLog:\n${tail}`);
   }
 
   ffmpeg.off('progress', progressHandler);
   report(90);
-  console.log('[YouKlip Export] FFmpeg exec selesai');
+  console.log('[Zenira Export] FFmpeg exec selesai');
 
   // ── Phase 4  (90–98 %): Read output ──
   let outputData;
@@ -231,25 +231,25 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
     outputData = await ffmpeg.readFile('output.mp4');
   } catch (readErr) {
     const tail = logs.slice(-10).join('\n');
-    console.error('[YouKlip Export] Gagal membaca output.mp4:', readErr);
-    console.error('[YouKlip Export] Log terakhir:\n', tail);
+    console.error('[Zenira Export] Gagal membaca output.mp4:', readErr);
+    console.error('[Zenira Export] Log terakhir:\n', tail);
     throw new Error(`Output MP4 tidak ditemukan. FFmpeg mungkin gagal.\n\nLog:\n${tail}`);
   }
   report(98);
 
   // ── Validate output ──
   const outputSize = outputData ? outputData.byteLength || outputData.length || 0 : 0;
-  console.log('[YouKlip Export] Output size:', outputSize, 'bytes', `(${(outputSize / 1024).toFixed(1)} KB)`);
+  console.log('[Zenira Export] Output size:', outputSize, 'bytes', `(${(outputSize / 1024).toFixed(1)} KB)`);
 
   if (!outputData || outputSize === 0) {
     const tail = logs.slice(-10).join('\n');
-    console.error('[YouKlip Export] Output kosong! Log:\n', tail);
+    console.error('[Zenira Export] Output kosong! Log:\n', tail);
     throw new Error('Output MP4 kosong — FFmpeg tidak menghasilkan file.');
   }
 
   if (outputSize < MIN_VALID_MP4_SIZE) {
     const tail = logs.slice(-10).join('\n');
-    console.error(`[YouKlip Export] Output terlalu kecil (${outputSize} bytes). Log:\n`, tail);
+    console.error(`[Zenira Export] Output terlalu kecil (${outputSize} bytes). Log:\n`, tail);
     throw new Error(
       `Output MP4 terlalu kecil (${(outputSize / 1024).toFixed(1)} KB). ` +
       `File video minimal harus ${(MIN_VALID_MP4_SIZE / 1024).toFixed(0)} KB. ` +
@@ -268,7 +268,7 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
   const safeData = new Uint8Array(outputData);
   const blob = new Blob([safeData], { type: 'video/mp4' });
 
-  console.log('[YouKlip Export] ✅ Blob created successfully, size:', blob.size, 'bytes', `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
+  console.log('[Zenira Export] ✅ Blob created successfully, size:', blob.size, 'bytes', `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
 
   return blob;
 }
@@ -278,16 +278,16 @@ export async function processVideoWithCaptions(videoFile, srtText, startTime = 0
  * Uses a temporary <a> element with download attribute.
  *
  * @param {Blob} blob - The blob to download
- * @param {string} filename - The filename for the download (default: youklip-output.mp4)
+ * @param {string} filename - The filename for the download (default: Zenira-output.mp4)
  */
-export function downloadBlob(blob, filename = 'youklip-output.mp4') {
+export function downloadBlob(blob, filename = 'Zenira-output.mp4') {
   // Sanitize filename — remove characters that could cause issues
   const safeName = filename
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_') // Remove illegal filename chars
     .replace(/_+/g, '_')                     // Collapse multiple underscores
-    .trim() || 'youklip-output.mp4';        // Fallback if empty after sanitization
+    .trim() || 'Zenira-output.mp4';        // Fallback if empty after sanitization
 
-  console.log('[YouKlip Download] Triggering download:', safeName, '| Size:', blob.size, 'bytes');
+  console.log('[Zenira Download] Triggering download:', safeName, '| Size:', blob.size, 'bytes');
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

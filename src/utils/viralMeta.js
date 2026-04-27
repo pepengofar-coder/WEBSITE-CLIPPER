@@ -1,5 +1,5 @@
 /**
- * Viral Metadata Generator for YouKlip
+ * Viral Metadata Generator for Zenira
  * Generates FYP-ready titles, descriptions, and hashtags in Indonesian.
  */
 
@@ -18,7 +18,7 @@ const TOPIC_HASHTAGS = {
   'Islamic': ['#islam', '#dakwah', '#ceramah', '#ustadz', '#hijrah'],
 };
 
-const BASE_FYP_HASHTAGS = ['#fyp', '#viral', '#foryou', '#foryoupage', '#trending', '#youklip'];
+const BASE_FYP_HASHTAGS = ['#fyp', '#viral', '#foryou', '#foryoupage', '#trending', '#Zenira'];
 
 const HOOK_TEMPLATES_ID = [
   '🔥 Ini yang jarang orang tahu!',

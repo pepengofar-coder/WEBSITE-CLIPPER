@@ -20,7 +20,7 @@
   top: 30%;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(124, 58, 237, 0.1);
+  background: rgba(124, 92, 255, 0.08);
   animation: float 6s ease-in-out infinite;
 }
 

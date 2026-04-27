@@ -136,7 +136,7 @@ export default function ExportDrawer() {
       console.log('[Export] downloadUrl:', result.downloadUrl);
 
       // Trigger download immediately using triggerDownload
-      triggerDownload(result.downloadUrl, result.filename || 'youklip-output.mp4');
+      triggerDownload(result.downloadUrl, result.filename || 'Zenira-output.mp4');
 
       await actions.exportClip(exportingClip.id);
       
@@ -160,7 +160,7 @@ export default function ExportDrawer() {
       await actions.exportClip(exportingClip.id);
     } catch {}
 
-    const safeName = (exportingClip.title || 'youklip-output')
+    const safeName = (exportingClip.title || 'Zenira-output')
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase()
       .substring(0, 40);
@@ -186,11 +186,11 @@ export default function ExportDrawer() {
       sourceUrl: clipSourceUrl,
       sourceTitle: exportingClip.sourceTitle,
       platform: exportingClip.platform,
-      dibuatOleh: 'YouKlip AI',
+      dibuatOleh: 'Zenira AI',
     }, null, 2));
 
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-    downloadBlob(zipBlob, `${safeName}_youklip.zip`);
+    downloadBlob(zipBlob, `${safeName}_Zenira.zip`);
     handleClose();
   };
 

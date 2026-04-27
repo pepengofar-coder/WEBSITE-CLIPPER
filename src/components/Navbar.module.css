@@ -9,15 +9,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-xl);
-  background: rgba(8, 8, 13, 0.8);
-  backdrop-filter: blur(20px);
+  background: rgba(7, 8, 18, 0.8);
+  backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: background var(--transition-base);
 }
 
 .navbar.scrolled {
-  background: rgba(8, 8, 13, 0.95);
+  background: rgba(7, 8, 18, 0.95);
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -34,8 +34,9 @@
 }
 
 .logoIcon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5));
+  font-size: 1.3rem;
+  filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.6));
+  color: var(--accent-cyan);
 }
 
 .logoAccent {
@@ -85,11 +86,11 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: #fff;
-  background: var(--accent-primary);
+  background: linear-gradient(135deg, #7C5CFF, #38CFFF);
   border-radius: var(--radius-full);
   text-decoration: none;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 2px 16px rgba(124, 92, 255, 0.3);
 }
 
 .navCta:hover {
@@ -165,7 +166,7 @@
     right: 0;
     width: 260px;
     height: 100vh;
-    background: rgba(14, 14, 22, 0.98);
+    background: rgba(7, 8, 18, 0.98);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     flex-direction: column;

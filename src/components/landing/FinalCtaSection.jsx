@@ -21,8 +21,8 @@ export default function FinalCtaSection() {
           viewport={{ once: true }}
           transition={{ delay: 0.15, duration: 0.6 }}
         >
-          Siap Bikin Konten Viral{' '}
-          <span className={styles.heroGradientText}>Lebih Cepat</span>?
+          Siap Clip Video{' '}
+          <span className={styles.heroGradientText}>Lebih Cerdas</span>?
         </motion.h2>
 
         <motion.p
@@ -32,8 +32,8 @@ export default function FinalCtaSection() {
           viewport={{ once: true }}
           transition={{ delay: 0.25, duration: 0.6 }}
         >
-          Bergabung dengan ribuan content creator yang sudah menghemat waktu editing mereka. 
-          Mulai gratis hari ini, upgrade kapan saja.
+          Bergabung dengan ribuan kreator yang sudah menghemat waktu editing mereka dengan Zenira. 
+          Mulai gratis hari ini.
         </motion.p>
 
         <motion.div
@@ -45,7 +45,7 @@ export default function FinalCtaSection() {
         >
           <a href="#hero-input" className={styles.finalCtaBtn}>
             <Sparkles size={20} />
-            Coba Gratis Sekarang
+            Mulai Clip Sekarang
             <ArrowRight size={18} />
           </a>
         </motion.div>

@@ -1,5 +1,5 @@
 /**
- * Thumbnail Generator for YouKlip
+ * Thumbnail Generator for Zenira
  * Creates FYP-ready 1080×1920 thumbnails using Canvas API.
  */
 
@@ -94,16 +94,16 @@ export async function generateThumbnail(clip) {
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, H - 200, W, 200);
 
-  // YouKlip logo
+  // Zenira logo
   ctx.font = 'bold 36px "Inter", sans-serif';
   ctx.fillStyle = '#a78bfa';
   ctx.textAlign = 'center';
-  ctx.fillText('🎬 YouKlip', W / 2, H - 130);
+  ctx.fillText('🎬 Zenira', W / 2, H - 130);
 
   // Hashtags
   ctx.font = '600 28px "Inter", sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.fillText('#fyp #viral #trending #youklip', W / 2, H - 80);
+  ctx.fillText('#fyp #viral #trending #Zenira', W / 2, H - 80);
 
   // Duration badge (bottom left)
   if (clip.duration) {
@@ -131,7 +131,7 @@ export function downloadThumbnail(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename || 'thumbnail_youklip.png';
+  a.download = filename || 'thumbnail_Zenira.png';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

@@ -44,8 +44,8 @@ export default function Navbar() {
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
       <Link to="/" className={styles.logo}>
-        <span className={styles.logoIcon}>🎬</span>
-        <span>Clip<span className={styles.logoAccent}>Forge</span></span>
+        <span className={styles.logoIcon}>✦</span>
+        <span>Zen<span className={styles.logoAccent}>ira</span></span>
       </Link>
 
       <div className={`${styles.navLinks} ${mobileOpen ? styles.navLinksOpen : ''}`}>

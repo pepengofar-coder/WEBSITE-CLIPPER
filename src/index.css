@@ -1,5 +1,6 @@
 /* ============================================
-   YouKlip — Global Design System
+   Zenira — Global Design System
+   "Clip smarter, not harder"
    ============================================ */
 
 /* Google Fonts */
@@ -8,32 +9,33 @@
 /* ── Design Tokens ── */
 :root {
   /* Backgrounds */
-  --bg-primary: #08080d;
-  --bg-secondary: #0e0e16;
-  --bg-card: #12121c;
-  --bg-elevated: #1a1a28;
-  --bg-input: #15151f;
+  --bg-primary: #070812;
+  --bg-secondary: #0c0d18;
+  --bg-card: #10111e;
+  --bg-elevated: #161828;
+  --bg-input: #121320;
 
   /* Accents */
-  --accent-primary: #7c3aed;
-  --accent-primary-light: #a78bfa;
-  --accent-primary-dark: #5b21b6;
+  --accent-primary: #7C5CFF;
+  --accent-primary-light: #A78BFA;
+  --accent-primary-dark: #5B3FCC;
   --accent-secondary: #10b981;
   --accent-secondary-light: #34d399;
   --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
-  --accent-info: #3b82f6;
+  --accent-info: #38CFFF;
+  --accent-cyan: #22D3EE;
 
   /* Viral score colors */
   --viral-fire: #ff6b35;
   --viral-hot: #f59e0b;
-  --viral-warm: #3b82f6;
+  --viral-warm: #38CFFF;
 
   /* Text */
-  --text-primary: #f1f1f5;
-  --text-secondary: #8b8ba3;
-  --text-muted: #5a5a72;
-  --text-accent: #a78bfa;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #5a5e78;
+  --text-accent: #A78BFA;
 
   /* Glass */
   --glass-bg: rgba(255, 255, 255, 0.04);
@@ -41,25 +43,25 @@
   --glass-hover: rgba(255, 255, 255, 0.07);
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #3b82f6 50%, #10b981 100%);
-  --gradient-hero: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
-  --gradient-card: linear-gradient(160deg, rgba(124, 58, 237, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%);
+  --gradient-primary: linear-gradient(135deg, #7C5CFF 0%, #38CFFF 100%);
+  --gradient-hero: linear-gradient(135deg, #7C5CFF 0%, #22D3EE 100%);
+  --gradient-card: linear-gradient(160deg, rgba(124, 92, 255, 0.10) 0%, rgba(56, 207, 255, 0.05) 100%);
   --gradient-fire: linear-gradient(135deg, #ff6b35, #f43f5e);
   --gradient-hot: linear-gradient(135deg, #f59e0b, #f97316);
-  --gradient-warm: linear-gradient(135deg, #3b82f6, #06b6d4);
+  --gradient-warm: linear-gradient(135deg, #38CFFF, #22D3EE);
 
   /* Shadows & Glows */
-  --glow-primary: 0 0 40px rgba(124, 58, 237, 0.25);
-  --glow-primary-strong: 0 0 60px rgba(124, 58, 237, 0.4);
+  --glow-primary: 0 0 40px rgba(124, 92, 255, 0.2);
+  --glow-primary-strong: 0 0 60px rgba(124, 92, 255, 0.35);
   --glow-secondary: 0 0 30px rgba(16, 185, 129, 0.2);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.6);
 
   /* Borders */
   --border-subtle: 1px solid rgba(255, 255, 255, 0.06);
   --border-card: 1px solid rgba(255, 255, 255, 0.08);
-  --border-input: 1px solid rgba(255, 255, 255, 0.1);
-  --border-accent: 1px solid rgba(124, 58, 237, 0.3);
+  --border-input: 1px solid rgba(255, 255, 255, 0.10);
+  --border-accent: 1px solid rgba(124, 92, 255, 0.3);
 
   /* Radius */
   --radius-sm: 8px;
@@ -226,7 +228,7 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* ── Scrollbar ── */
@@ -358,6 +360,6 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(124, 58, 237, 0.3);
+  background: rgba(124, 92, 255, 0.3);
   color: var(--text-primary);
 }

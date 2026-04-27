@@ -129,17 +129,17 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: white;
-  background: var(--accent-primary);
+  background: linear-gradient(135deg, #7C5CFF, #38CFFF);
   border-radius: 18px;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 16px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 2px 16px rgba(124, 92, 255, 0.35);
   white-space: nowrap;
 }
 
 .generateBtn:hover:not(:disabled) {
-  background: var(--accent-primary-light);
+  background: linear-gradient(135deg, #A78BFA, #38CFFF);
   transform: translateY(-1px);
-  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 4px 24px rgba(124, 92, 255, 0.5);
 }
 
 .generateBtn:active:not(:disabled) {
