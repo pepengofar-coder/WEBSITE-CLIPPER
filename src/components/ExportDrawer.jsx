@@ -7,7 +7,9 @@ import { requireFeature } from '../hooks/useFeatureGate';
 import { CAPTION_STYLES } from '../utils/mockData';
 import { SUPPORTED_LANGUAGES, SOURCE_LANGUAGES } from '../utils/translation';
 import { generateViralMeta, generateClipLink } from '../utils/viralMeta';
-import { exportMp4, triggerDownload } from '../utils/apiClient';
+import { createRenderJob, subscribeToJob } from '../lib/clipJobService';
+import { supabase } from '../lib/supabase';
+import { triggerDownload } from '../utils/apiClient';
 import { downloadBlob } from '../utils/videoProcessor';
 import Toast from './Toast';
 import styles from './ExportDrawer.module.css';
@@ -31,6 +33,10 @@ export default function ExportDrawer() {
   const [quality, setQuality] = useState('720p');
   const [fps, setFps] = useState('30');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Job status
+  const [jobStatus, setJobStatus] = useState(null); // 'pending', 'processing', 'completed', 'failed'
+  const [exportProgress, setExportProgress] = useState(0);
 
   // Simulated render progress for metadata readiness
   const [renderProgress, setRenderProgress] = useState(0);
@@ -100,7 +106,7 @@ export default function ExportDrawer() {
 
   const [downloadUrl, setDownloadUrl] = useState(null);
 
-  // ── Main export handler: 1-click backend download ──
+  // ── Main export handler: Edge Function + Polling ──
   const handleExportMP4 = async () => {
     if (!clipSourceUrl) {
       setExportError('Source URL tidak ditemukan. Silakan kembali dan paste link ulang.');
@@ -111,17 +117,8 @@ export default function ExportDrawer() {
     setExportError(null);
     setExportSuccess(false);
     setDownloadUrl(null);
-
-    console.log('[Export] request payload:', {
-      sourceUrl: clipSourceUrl,
-      title: exportingClip.title,
-      startTime: exportingClip.startTime,
-      endTime: exportingClip.endTime,
-      quality,
-      fps,
-      subtitleLang: selectedLang,
-      withSubtitles: subtitleReady,
-    });
+    setJobStatus('pending');
+    setExportProgress(10);
 
     try {
       // ── Feature gate: block execution if feature not allowed ──
@@ -132,38 +129,49 @@ export default function ExportDrawer() {
       } catch (gateErr) {
         setExportError(gateErr.message);
         setIsExporting(false);
+        setJobStatus(null);
         return;
       }
 
-      const result = await exportMp4({
-        sourceUrl: clipSourceUrl,
-        title: exportingClip.title,
-        startTime: exportingClip.startTime || 0,
-        endTime: exportingClip.endTime || 0,
+      // Create Job via Edge Function
+      const result = await createRenderJob({
+        input_video_path: clipSourceUrl, // storage path from upload
+        start_time: exportingClip.startTime || 0,
+        end_time: exportingClip.endTime || 0,
         quality,
-        fps,
-        withSubtitles: subtitleReady,
-        subtitleLang: selectedLang,
+        title: exportingClip.title,
       });
 
-      console.log('[Export] server response:', result);
-      console.log('[Export] downloadUrl:', result.downloadUrl);
+      console.log('[Export] Job created:', result.job_id);
+      setExportProgress(30);
 
-      // Trigger download immediately using triggerDownload
-      triggerDownload(result.downloadUrl, result.filename || 'Zenira-output.mp4');
-
-      await actions.exportClip(exportingClip.id);
-      
-      // Update states
-      setExportSuccess(true);
-      setIsExporting(false);
-      setDownloadUrl(result.downloadUrl);
-      dispatch({ type: 'SET_TOAST', payload: { message: '✅ MP4 berhasil dibuat!', type: 'success' } });
+      // Subscribe to updates
+      subscribeToJob(result.job_id, async (updatedJob) => {
+        setJobStatus(updatedJob.status);
+        if (updatedJob.status === 'processing') {
+          setExportProgress(60);
+        } else if (updatedJob.status === 'completed') {
+          setExportProgress(100);
+          setExportSuccess(true);
+          setIsExporting(false);
+          
+          const { data } = supabase.storage.from('results').getPublicUrl(updatedJob.output_video_path);
+          setDownloadUrl(data.publicUrl);
+          
+          triggerDownload(data.publicUrl, `Zenira-${exportingClip.title}.mp4`);
+          await actions.exportClip(exportingClip.id);
+          dispatch({ type: 'SET_TOAST', payload: { message: '✅ MP4 berhasil dibuat!', type: 'success' } });
+        } else if (updatedJob.status === 'failed') {
+          setIsExporting(false);
+          setExportError(updatedJob.error_message || 'Render failed');
+        }
+      });
       
     } catch (err) {
       console.error('[ExportDrawer] ❌ Export failed:', err);
       setExportError(err.message || 'Gagal mengekspor video.');
       setIsExporting(false);
+      setJobStatus('failed');
       dispatch({ type: 'SET_TOAST', payload: { message: `❌ Export gagal: ${err.message}`, type: 'error' } });
     }
   };
@@ -421,13 +429,14 @@ export default function ExportDrawer() {
                 {isExporting && (
                   <div className={styles.videoProgressWrap}>
                     <div className={styles.progressLabel}>
-                      <span>⏳ Sedang membuat MP4...</span>
+                      <span>{jobStatus === 'pending' ? '⏳ Menunggu antrean server...' : '⏳ Sedang merender MP4...'}</span>
+                      <span className={styles.progressPercent}>{exportProgress}%</span>
                     </div>
                     <div className={styles.progressBar}>
-                      <div className={styles.progressFill} style={{ width: '100%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
+                      <div className={styles.progressFill} style={{ width: `${exportProgress}%` }} />
                     </div>
                     <p className={styles.progressHint}>
-                      Server sedang mengunduh dan memproses video. Ini bisa memakan waktu 30 detik - 2 menit.
+                      {jobStatus === 'pending' ? 'Server sedang menyiapkan worker. Harap tunggu...' : 'Server sedang mengunduh dan memproses video. Ini bisa memakan waktu 30 detik - 2 menit.'}
                     </p>
                   </div>
                 )}
