@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAppState, useAppDispatch } from '../context/AppContext';
-import { exportMp4, triggerDownload } from '../utils/apiClient';
+import { createRenderJob } from '../lib/clipJobService';
 import ClipCard from '../components/ClipCard';
 import EditModal from '../components/EditModal';
 import ExportDrawer from '../components/ExportDrawer';
@@ -31,7 +31,7 @@ export default function ResultsPage() {
     if (isExportingAll || !clips.length) return;
 
     setIsExportingAll(true);
-    dispatch({ type: 'SET_TOAST', payload: { message: '⏳ Mengekspor semua klip...', type: 'loading' } });
+    dispatch({ type: 'SET_TOAST', payload: { message: '⏳ Memulai proses render untuk semua klip...', type: 'loading' } });
 
     let successCount = 0;
     let failCount = 0;
@@ -40,21 +40,18 @@ export default function ResultsPage() {
       const clipSourceUrl = clip.sourceUrl || clip.webpageUrl || sourceInfo?.sourceUrl || sourceInfo?.webpageUrl || currentUrl;
 
       try {
-        const result = await exportMp4({
-          sourceUrl: clipSourceUrl,
+        await createRenderJob({
+          input_video_path: clipSourceUrl,
           title: clip.title,
-          startTime: clip.startTime || 0,
-          endTime: clip.endTime || 0,
+          start_time: clip.startTime || 0,
+          end_time: clip.endTime || 0,
           quality: '720p',
         });
 
-        triggerDownload(result.downloadUrl, result.filename);
         successCount++;
-
-        // Small delay between downloads to avoid browser blocking
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 500));
       } catch (err) {
-        console.error(`[DownloadAll] Failed for clip "${clip.title}":`, err);
+        console.error(`[DownloadAll] Failed to create job for "${clip.title}":`, err);
         failCount++;
       }
     }
@@ -62,9 +59,9 @@ export default function ResultsPage() {
     setIsExportingAll(false);
 
     if (failCount === 0) {
-      dispatch({ type: 'SET_TOAST', payload: { message: `✅ ${successCount} klip berhasil diekspor!`, type: 'success' } });
+      dispatch({ type: 'SET_TOAST', payload: { message: `✅ ${successCount} job render berhasil dibuat! Cek tab Export.`, type: 'success' } });
     } else {
-      dispatch({ type: 'SET_TOAST', payload: { message: `⚠️ ${successCount} berhasil, ${failCount} gagal.`, type: 'error' } });
+      dispatch({ type: 'SET_TOAST', payload: { message: `⚠️ ${successCount} job dibuat, ${failCount} gagal.`, type: 'error' } });
     }
   };
 

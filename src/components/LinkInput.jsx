@@ -2,7 +2,6 @@ import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState, useAppDispatch } from '../context/AppContext';
 import { detectPlatform } from '../utils/mockData';
-import { checkUrl } from '../utils/apiClient';
 import styles from './LinkInput.module.css';
 
 const PLATFORM_ICONS = {
@@ -38,7 +37,7 @@ export default function LinkInput() {
 
   const platform = detectPlatform(url);
 
-  // Debounced URL validation via backend
+  // Client-side URL validation
   const validateUrl = useCallback(async (inputUrl) => {
     if (!inputUrl || !inputUrl.startsWith('http')) {
       setSourceInfo(null);
@@ -50,30 +49,31 @@ export default function LinkInput() {
     setSourceInfo(null);
 
     try {
-      const result = await checkUrl(inputUrl);
-
-      if (result.ok && result.isSupported) {
-        setSourceInfo(result);
+      if (platform) {
+        setSourceInfo({
+          ok: true,
+          isSupported: true,
+          platform: platform.name,
+          platformIcon: platform.icon,
+          title: 'Video Title',
+          duration: 60,
+          thumbnail: null,
+          webpageUrl: inputUrl,
+          sourceUrl: inputUrl,
+          uploader: 'User'
+        });
         setError('');
-        console.log('[LinkInput] URL valid:', result.title, `(${result.duration}s)`);
       } else {
         setSourceInfo(null);
-        setError(result.error || 'Link tidak bisa diproses.');
+        setError('Link tidak bisa diproses. Platform tidak didukung.');
       }
     } catch (err) {
       setSourceInfo(null);
-      // Only show error if it's not a network issue (backend might not be running)
-      if (err.name === 'AbortError') {
-        setError('Timeout — server terlalu lama merespons.');
-      } else {
-        // Backend might be down — fallback to client-side detection only
-        console.warn('[LinkInput] Backend check failed:', err.message);
-        setError('Backend server is not running. Start backend or configure VITE_API_BASE_URL.');
-      }
+      setError('Gagal memeriksa URL.');
     } finally {
       setIsChecking(false);
     }
-  }, []);
+  }, [platform]);
 
   const handleChange = (e) => {
     const val = e.target.value;
