@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppState, useAppDispatch } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -10,6 +11,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { hasResults } = useAppState();
   const dispatch = useAppDispatch();
+  const { user, profile, isAdmin, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -19,6 +21,11 @@ export default function Navbar() {
 
   const handleNewClip = () => {
     dispatch({ type: 'RESET' });
+    navigate('/');
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
     navigate('/');
   };
 
@@ -64,10 +71,38 @@ export default function Navbar() {
             ← Klip Baru
           </button>
         )}
-        {isHome && (
-          <a href="#hero-input" className={styles.navCta}>
-            Coba Gratis
-          </a>
+
+        {/* Auth section */}
+        {user ? (
+          <>
+            {isAdmin && (
+              <Link to="/admin" className={styles.navLink} id="admin-link">
+                ⚡ Admin
+              </Link>
+            )}
+            <div className={styles.authGroup}>
+              <span className={styles.userBadge}>
+                {profile?.package === 'premium' ? '💎' : profile?.package === 'pro' ? '⚡' : '👤'}{' '}
+                {profile?.package?.charAt(0).toUpperCase() + profile?.package?.slice(1) || 'Basic'}
+              </span>
+              <button className={styles.signOutBtn} onClick={handleSignOut} id="signout-btn">
+                Keluar
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {isHome && (
+              <Link to="/login" className={styles.navCta} id="login-nav-btn">
+                Masuk
+              </Link>
+            )}
+            {!isHome && (
+              <Link to="/login" className={styles.navLink} id="login-nav-link">
+                Masuk
+              </Link>
+            )}
+          </>
         )}
       </div>
 

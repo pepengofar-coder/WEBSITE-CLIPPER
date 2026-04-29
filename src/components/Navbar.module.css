@@ -120,6 +120,36 @@
   box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
 }
 
+/* Auth */
+.authGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userBadge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(124, 92, 255, 0.12);
+  border: 1px solid rgba(124, 92, 255, 0.2);
+  color: var(--accent-primary-light);
+}
+
+.signOutBtn {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  padding: 4px 8px;
+}
+
+.signOutBtn:hover {
+  color: var(--accent-danger);
+}
+
 /* Mobile hamburger */
 .mobileToggle {
   display: none;

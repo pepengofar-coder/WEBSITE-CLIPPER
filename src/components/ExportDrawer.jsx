@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
 import { useAppState, useAppDispatch } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { requireFeature } from '../hooks/useFeatureGate';
 import { CAPTION_STYLES } from '../utils/mockData';
 import { SUPPORTED_LANGUAGES, SOURCE_LANGUAGES } from '../utils/translation';
 import { generateViralMeta, generateClipLink } from '../utils/viralMeta';
@@ -13,6 +15,7 @@ import styles from './ExportDrawer.module.css';
 export default function ExportDrawer() {
   const { exportingClip, currentUrl, sourceInfo, actions, toast } = useAppState();
   const dispatch = useAppDispatch();
+  const { hasFeature, profile } = useAuth();
 
   const [isReady, setIsReady] = useState(false);
   const [isGeneratingSubs, setIsGeneratingSubs] = useState(false);
@@ -121,6 +124,17 @@ export default function ExportDrawer() {
     });
 
     try {
+      // ── Feature gate: block execution if feature not allowed ──
+      try {
+        if (quality === '1080p') {
+          requireFeature(hasFeature, 'export_1080p', profile?.package);
+        }
+      } catch (gateErr) {
+        setExportError(gateErr.message);
+        setIsExporting(false);
+        return;
+      }
+
       const result = await exportMp4({
         sourceUrl: clipSourceUrl,
         title: exportingClip.title,
@@ -352,9 +366,21 @@ export default function ExportDrawer() {
                 <div className={styles.subtitleControls} style={{ marginBottom: '4px' }}>
                   <div className={styles.langGroup}>
                     <label className={styles.langLabel}>Kualitas Resolusi</label>
-                    <select className={styles.langSelect} value={quality} onChange={e => setQuality(e.target.value)} id="quality-select">
+                    <select
+                      className={styles.langSelect}
+                      value={quality}
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '1080p' && !hasFeature('export_1080p')) {
+                          dispatch({ type: 'SET_TOAST', payload: { message: '🔒 Export 1080p hanya tersedia untuk paket Pro ke atas. Silakan upgrade.', type: 'error' } });
+                          return;
+                        }
+                        setQuality(val);
+                      }}
+                      id="quality-select"
+                    >
                       <option value="720p">720p (Cepat, Ringan)</option>
-                      <option value="1080p">1080p (HD, Jernih)</option>
+                      <option value="1080p">{hasFeature('export_1080p') ? '1080p (HD, Jernih)' : '1080p 🔒 (Pro)'}</option>
                     </select>
                   </div>
                 </div>
