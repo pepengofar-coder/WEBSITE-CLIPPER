@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zenira — Brand Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-primary:#06060B;--bg-secondary:#0C0C14;--bg-elevated:#12121E;--bg-surface:#1A1A2E;
+  --indigo-deep:#2D1B69;--indigo:#4338CA;--indigo-light:#6366F1;
+  --purple:#7C3AED;--purple-light:#A78BFA;--violet:#8B5CF6;
+  --cyan:#06B6D4;--cyan-light:#22D3EE;--cyan-glow:#67E8F9;
+  --text-primary:#F8FAFC;--text-secondary:#94A3B8;--text-muted:#64748B;
+  --gradient-primary:linear-gradient(135deg,#4338CA,#7C3AED);
+  --gradient-accent:linear-gradient(135deg,#7C3AED,#06B6D4);
+  --gradient-glow:linear-gradient(135deg,#6366F1,#A78BFA,#22D3EE);
+  --glass-bg:rgba(255,255,255,0.03);--glass-border:rgba(255,255,255,0.06);
+  --radius-sm:8px;--radius-md:12px;--radius-lg:20px;--radius-xl:28px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.6;overflow-x:hidden}
+.container{max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 0;backdrop-filter:blur(20px);background:rgba(6,6,11,0.7);border-bottom:1px solid var(--glass-border)}
+nav .container{display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-size:22px;font-weight:700;background:var(--gradient-glow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:32px}
+.nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:500;transition:color .3s}
+.nav-links a:hover{color:var(--text-primary)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;padding-top:80px}
+.hero::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.12),transparent 70%);top:10%;left:50%;transform:translateX(-50%);pointer-events:none}
+.hero::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(6,182,212,0.08),transparent 70%);bottom:20%;right:10%;pointer-events:none}
+.hero-content{position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:100px;background:var(--glass-bg);border:1px solid var(--glass-border);font-size:13px;color:var(--text-secondary);margin-bottom:32px;backdrop-filter:blur(10px)}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.hero h1{font-size:clamp(56px,8vw,96px);font-weight:800;letter-spacing:-3px;line-height:1;margin-bottom:16px}
+.hero h1 .gradient{background:var(--gradient-glow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero .tagline{font-size:clamp(18px,2.5vw,24px);color:var(--text-secondary);font-weight:300;letter-spacing:1px;margin-bottom:48px}
+.hero .tagline em{font-style:normal;color:var(--cyan-light)}
+
+/* SECTIONS */
+section{padding:120px 0}
+.section-label{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--indigo-light);margin-bottom:16px}
+.section-label::before{content:'';width:24px;height:1px;background:var(--indigo-light)}
+.section-title{font-size:clamp(32px,4vw,48px);font-weight:700;letter-spacing:-1.5px;margin-bottom:16px}
+.section-desc{color:var(--text-secondary);font-size:16px;max-width:560px;margin-bottom:56px}
+
+/* BRAND IMAGES */
+.brand-showcase{display:grid;gap:32px}
+.brand-card{border-radius:var(--radius-lg);overflow:hidden;background:var(--glass-bg);border:1px solid var(--glass-border);backdrop-filter:blur(10px);transition:transform .4s,box-shadow .4s}
+.brand-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(99,102,241,0.1)}
+.brand-card img{width:100%;display:block}
+.brand-card .card-label{padding:20px 24px;font-size:14px;color:var(--text-secondary);font-weight:500;border-top:1px solid var(--glass-border)}
+.brand-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+@media(max-width:768px){.brand-grid-2{grid-template-columns:1fr}}
+
+/* COLORS */
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
+.color-card{border-radius:var(--radius-lg);overflow:hidden;background:var(--bg-elevated);border:1px solid var(--glass-border)}
+.color-swatch{height:120px;position:relative;display:flex;align-items:flex-end;padding:16px}
+.color-swatch span{font-size:12px;font-weight:600;color:rgba(255,255,255,0.8);background:rgba(0,0,0,0.3);padding:4px 10px;border-radius:6px;backdrop-filter:blur(4px)}
+.color-info{padding:16px 20px}
+.color-info h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.color-info p{font-size:12px;color:var(--text-muted);font-family:'Courier New',monospace}
+
+/* TYPOGRAPHY */
+.type-showcase{display:flex;flex-direction:column;gap:40px}
+.type-row{display:flex;align-items:baseline;gap:32px;padding:24px 0;border-bottom:1px solid var(--glass-border)}
+.type-row .meta{min-width:160px;flex-shrink:0}
+.type-row .meta h4{font-size:12px;font-weight:600;color:var(--indigo-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.type-row .meta p{font-size:12px;color:var(--text-muted)}
+.type-row .sample{flex:1}
+.t-display{font-size:48px;font-weight:800;letter-spacing:-2px}
+.t-h1{font-size:36px;font-weight:700;letter-spacing:-1px}
+.t-h2{font-size:28px;font-weight:600;letter-spacing:-0.5px}
+.t-body{font-size:16px;font-weight:400;color:var(--text-secondary)}
+.t-caption{font-size:13px;font-weight:500;color:var(--text-muted);letter-spacing:0.5px}
+
+/* GLASS CARDS */
+.glass-demo{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:60px;background:var(--bg-secondary);border-radius:var(--radius-xl);border:1px solid var(--glass-border);position:relative;overflow:hidden}
+.glass-demo::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:var(--purple);opacity:.15;filter:blur(80px);top:-40px;left:30%}
+.glass-demo::after{content:'';position:absolute;width:160px;height:160px;border-radius:50%;background:var(--cyan);opacity:.1;filter:blur(60px);bottom:-20px;right:20%}
+.glass-item{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-lg);padding:32px;position:relative;z-index:1;transition:all .3s}
+.glass-item:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12)}
+.glass-item .icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
+.glass-item h4{font-size:16px;font-weight:600;margin-bottom:8px}
+.glass-item p{font-size:13px;color:var(--text-muted);line-height:1.6}
+.icon-clip{background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(99,102,241,0.05));color:var(--indigo-light)}
+.icon-ai{background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(124,58,237,0.05));color:var(--purple-light)}
+.icon-export{background:linear-gradient(135deg,rgba(6,182,212,0.2),rgba(6,182,212,0.05));color:var(--cyan-light)}
+@media(max-width:768px){.glass-demo{grid-template-columns:1fr;padding:24px}}
+
+/* TAGLINES */
+.tagline-grid{display:flex;flex-direction:column;gap:24px}
+.tagline-card{padding:32px 40px;border-radius:var(--radius-lg);background:var(--glass-bg);border:1px solid var(--glass-border);display:flex;align-items:center;gap:24px;transition:all .3s}
+.tagline-card:hover{border-color:rgba(99,102,241,0.2);background:rgba(99,102,241,0.03)}
+.tagline-card .tag-type{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);min-width:100px}
+.tagline-card .tag-text{font-size:24px;font-weight:300;letter-spacing:0.5px}
+.tagline-card .tag-text.primary{background:var(--gradient-glow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:400}
+
+/* TOKENS */
+.tokens-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.token-group{background:var(--bg-elevated);border-radius:var(--radius-lg);padding:32px;border:1px solid var(--glass-border)}
+.token-group h4{font-size:14px;font-weight:600;margin-bottom:20px;color:var(--indigo-light)}
+.token-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.token-row:last-child{border:none}
+.token-name{font-size:13px;font-family:'Courier New',monospace;color:var(--text-secondary)}
+.token-value{font-size:13px;color:var(--text-muted)}
+.token-preview{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:8px}
+@media(max-width:768px){.tokens-grid{grid-template-columns:1fr}}
+
+/* FOOTER */
+footer{padding:60px 0;border-top:1px solid var(--glass-border);text-align:center}
+footer p{font-size:13px;color:var(--text-muted)}
+footer .brand{font-weight:700;background:var(--gradient-glow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.animate{animation:fadeUp .8s ease-out both}
+.delay-1{animation-delay:.1s}.delay-2{animation-delay:.2s}.delay-3{animation-delay:.3s}.delay-4{animation-delay:.4s}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-logo">Zenira</div>
+    <div class="nav-links">
+      <a href="#logo">Logo</a>
+      <a href="#colors">Colors</a>
+      <a href="#typography">Typography</a>
+      <a href="#components">Components</a>
+      <a href="#taglines">Taglines</a>
+      <a href="#tokens">Tokens</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content animate">
+    <div class="hero-badge"><span class="dot"></span> Brand Identity System v1.0</div>
+    <h1><span class="gradient">Zenira</span></h1>
+    <p class="tagline">Clip smarter, <em>not harder</em></p>
+  </div>
+</div>
+
+<!-- LOGO -->
+<section id="logo">
+  <div class="container">
+    <span class="section-label">01 — Logo</span>
+    <h2 class="section-title">Logo & App Icon</h2>
+    <p class="section-desc">The Zenira wordmark is set in a custom-weighted Inter with a subtle clip motif in the Z. The app icon distills the brand into a single gradient symbol.</p>
+    <div class="brand-grid-2 brand-showcase">
+      <div class="brand-card">
+        <img src="zenira-logo-white.png" alt="Zenira Logo">
+        <div class="card-label">Primary Wordmark — White on Dark</div>
+      </div>
+      <div class="brand-card">
+        <img src="zenira-app-icon.png" alt="Zenira App Icon">
+        <div class="card-label">App Icon — Gradient Symbol</div>
+      </div>
+    </div>
+    <div class="brand-showcase" style="margin-top:32px">
+      <div class="brand-card">
+        <img src="zenira-brand-board.png" alt="Zenira Brand Board">
+        <div class="card-label">Brand Board — Full Identity Overview</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COLORS -->
+<section id="colors">
+  <div class="container">
+    <span class="section-label">02 — Color Palette</span>
+    <h2 class="section-title">Color System</h2>
+    <p class="section-desc">A dark-first palette with layered depth. Deep indigo grounds the brand, violet adds energy, and cyan provides sharp contrast for interactive elements.</p>
+    <div class="color-grid">
+      <div class="color-card">
+        <div class="color-swatch" style="background:linear-gradient(135deg,#4338CA,#6366F1)"><span>Primary</span></div>
+        <div class="color-info"><h4>Deep Indigo</h4><p>#4338CA → #6366F1</p></div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:linear-gradient(135deg,#7C3AED,#A78BFA)"><span>Secondary</span></div>
+        <div class="color-info"><h4>Purple / Violet</h4><p>#7C3AED → #A78BFA</p></div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:linear-gradient(135deg,#06B6D4,#22D3EE)"><span>Accent</span></div>
+        <div class="color-info"><h4>Neon Cyan</h4><p>#06B6D4 → #22D3EE</p></div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:#06060B;border-bottom:1px solid rgba(255,255,255,0.06)"><span style="color:rgba(255,255,255,0.4)">Background</span></div>
+        <div class="color-info"><h4>Near Black</h4><p>#06060B</p></div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:#0C0C14;border-bottom:1px solid rgba(255,255,255,0.06)"><span style="color:rgba(255,255,255,0.4)">Surface</span></div>
+        <div class="color-info"><h4>Dark Surface</h4><p>#0C0C14</p></div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:#1A1A2E;border-bottom:1px solid rgba(255,255,255,0.06)"><span style="color:rgba(255,255,255,0.5)">Elevated</span></div>
+        <div class="color-info"><h4>Elevated Card</h4><p>#1A1A2E</p></div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:linear-gradient(135deg,#6366F1,#A78BFA,#22D3EE)"><span>Brand Gradient</span></div>
+        <div class="color-info"><h4>Glow Gradient</h4><p>Indigo → Violet → Cyan</p></div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:#12121E;border-bottom:1px solid rgba(255,255,255,0.06)"><span style="color:rgba(255,255,255,0.4)">Border</span></div>
+        <div class="color-info"><h4>Glass Border</h4><p>rgba(255,255,255,0.06)</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPOGRAPHY -->
+<section id="typography">
+  <div class="container">
+    <span class="section-label">03 — Typography</span>
+    <h2 class="section-title">Type Scale</h2>
+    <p class="section-desc">Inter is the primary typeface — clean, neutral, and highly readable at all sizes. Tight letter-spacing for headings, generous for body text.</p>
+    <div class="type-showcase">
+      <div class="type-row">
+        <div class="meta"><h4>Display</h4><p>800 / -2px tracking</p></div>
+        <div class="sample t-display">Zenira Platform</div>
+      </div>
+      <div class="type-row">
+        <div class="meta"><h4>Heading 1</h4><p>700 / -1px tracking</p></div>
+        <div class="sample t-h1">Smart Video Clipping</div>
+      </div>
+      <div class="type-row">
+        <div class="meta"><h4>Heading 2</h4><p>600 / -0.5px tracking</p></div>
+        <div class="sample t-h2">Extract Highlights Instantly</div>
+      </div>
+      <div class="type-row">
+        <div class="meta"><h4>Body</h4><p>400 / normal tracking</p></div>
+        <div class="sample t-body">Zenira helps creators and teams process video content faster with AI-powered smart clipping. No complex timelines, no bloated editors — just clean, fast results.</div>
+      </div>
+      <div class="type-row">
+        <div class="meta"><h4>Caption</h4><p>500 / 0.5px tracking</p></div>
+        <div class="sample t-caption">CLIP SMARTER, NOT HARDER — ZENIRA 2026</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPONENTS -->
+<section id="components">
+  <div class="container">
+    <span class="section-label">04 — Components</span>
+    <h2 class="section-title">Glassmorphism UI</h2>
+    <p class="section-desc">The design system uses layered glass panels with subtle blur and transparency, creating depth without clutter.</p>
+    <div class="glass-demo">
+      <div class="glass-item">
+        <div class="icon icon-clip">✂</div>
+        <h4>Smart Clip</h4>
+        <p>AI detects the best moments in your video and extracts them as individual clips.</p>
+      </div>
+      <div class="glass-item">
+        <div class="icon icon-ai">⚡</div>
+        <h4>AI Processing</h4>
+        <p>Powered by intelligent scene detection and audio analysis for precise results.</p>
+      </div>
+      <div class="glass-item">
+        <div class="icon icon-export">↗</div>
+        <h4>Quick Export</h4>
+        <p>Export clips in any format with one click. Ready for social media or archiving.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HERO & DASHBOARD PREVIEWS -->
+<section id="previews">
+  <div class="container">
+    <span class="section-label">05 — Application</span>
+    <h2 class="section-title">UI Application</h2>
+    <p class="section-desc">The brand identity applied to real product surfaces — website hero and dashboard interface.</p>
+    <div class="brand-showcase">
+      <div class="brand-card">
+        <img src="zenira-hero-header.png" alt="Zenira Hero">
+        <div class="card-label">Website Hero Section</div>
+      </div>
+    </div>
+    <div class="brand-showcase" style="margin-top:32px">
+      <div class="brand-card">
+        <img src="zenira-dashboard-preview.png" alt="Zenira Dashboard">
+        <div class="card-label">Dashboard Interface — Clip Editor</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TAGLINES -->
+<section id="taglines">
+  <div class="container">
+    <span class="section-label">06 — Voice</span>
+    <h2 class="section-title">Taglines</h2>
+    <p class="section-desc">Brand voice that balances efficiency with approachability. Clean, direct, and memorable.</p>
+    <div class="tagline-grid">
+      <div class="tagline-card">
+        <span class="tag-type">Primary</span>
+        <span class="tag-text primary">Clip smarter, not harder</span>
+      </div>
+      <div class="tagline-card">
+        <span class="tag-type">English Alt</span>
+        <span class="tag-text">Your video, simplified</span>
+      </div>
+      <div class="tagline-card">
+        <span class="tag-type">Indonesian</span>
+        <span class="tag-text">Ambil momen, tanpa ribet</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOKENS -->
+<section id="tokens">
+  <div class="container">
+    <span class="section-label">07 — Design Tokens</span>
+    <h2 class="section-title">CSS Tokens</h2>
+    <p class="section-desc">Copy-ready design tokens for consistent implementation across all product surfaces.</p>
+    <div class="tokens-grid">
+      <div class="token-group">
+        <h4>Colors</h4>
+        <div class="token-row"><span class="token-name">--bg-primary</span><span class="token-value"><span class="token-preview" style="background:#06060B"></span>#06060B</span></div>
+        <div class="token-row"><span class="token-name">--bg-secondary</span><span class="token-value"><span class="token-preview" style="background:#0C0C14"></span>#0C0C14</span></div>
+        <div class="token-row"><span class="token-name">--bg-elevated</span><span class="token-value"><span class="token-preview" style="background:#12121E"></span>#12121E</span></div>
+        <div class="token-row"><span class="token-name">--bg-surface</span><span class="token-value"><span class="token-preview" style="background:#1A1A2E"></span>#1A1A2E</span></div>
+        <div class="token-row"><span class="token-name">--indigo</span><span class="token-value"><span class="token-preview" style="background:#4338CA"></span>#4338CA</span></div>
+        <div class="token-row"><span class="token-name">--purple</span><span class="token-value"><span class="token-preview" style="background:#7C3AED"></span>#7C3AED</span></div>
+        <div class="token-row"><span class="token-name">--cyan</span><span class="token-value"><span class="token-preview" style="background:#06B6D4"></span>#06B6D4</span></div>
+      </div>
+      <div class="token-group">
+        <h4>Spacing & Radius</h4>
+        <div class="token-row"><span class="token-name">--radius-sm</span><span class="token-value">8px</span></div>
+        <div class="token-row"><span class="token-name">--radius-md</span><span class="token-value">12px</span></div>
+        <div class="token-row"><span class="token-name">--radius-lg</span><span class="token-value">20px</span></div>
+        <div class="token-row"><span class="token-name">--radius-xl</span><span class="token-value">28px</span></div>
+        <div class="token-row"><span class="token-name">--glass-bg</span><span class="token-value">rgba(255,255,255,0.03)</span></div>
+        <div class="token-row"><span class="token-name">--glass-border</span><span class="token-value">rgba(255,255,255,0.06)</span></div>
+        <div class="token-row"><span class="token-name">font-family</span><span class="token-value">'Inter', system-ui</span></div>
+      </div>
+      <div class="token-group">
+        <h4>Gradients</h4>
+        <div class="token-row"><span class="token-name">--gradient-primary</span><span class="token-value">135deg #4338CA→#7C3AED</span></div>
+        <div class="token-row"><span class="token-name">--gradient-accent</span><span class="token-value">135deg #7C3AED→#06B6D4</span></div>
+        <div class="token-row"><span class="token-name">--gradient-glow</span><span class="token-value">135deg Indigo→Violet→Cyan</span></div>
+      </div>
+      <div class="token-group">
+        <h4>Typography Scale</h4>
+        <div class="token-row"><span class="token-name">Display</span><span class="token-value">48-96px / 800</span></div>
+        <div class="token-row"><span class="token-name">Heading 1</span><span class="token-value">36px / 700</span></div>
+        <div class="token-row"><span class="token-name">Heading 2</span><span class="token-value">28px / 600</span></div>
+        <div class="token-row"><span class="token-name">Body</span><span class="token-value">16px / 400</span></div>
+        <div class="token-row"><span class="token-name">Caption</span><span class="token-value">13px / 500</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p><span class="brand">Zenira</span> — Brand Identity System v1.0 — 2026</p>
+  </div>
+</footer>
+
+</body>
+</html>

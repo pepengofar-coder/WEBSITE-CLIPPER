@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120">
+  <defs>
+    <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366F1"/>
+      <stop offset="50%" style="stop-color:#A78BFA"/>
+      <stop offset="100%" style="stop-color:#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&amp;display=swap');
+    .wordmark { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 72px; letter-spacing: -3px; }
+  </style>
+  <!-- Wordmark -->
+  <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" class="wordmark" fill="white">Zenira</text>
+  <!-- Subtle accent line (clip motif) -->
+  <line x1="193" y1="32" x2="210" y2="78" stroke="url(#glow-grad)" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+</svg>

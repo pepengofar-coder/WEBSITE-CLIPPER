@@ -1,0 +1,56 @@
+.gateWrapper {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.lockedOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 8, 18, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(124, 92, 255, 0.15);
+}
+
+.lockedContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: var(--space-lg);
+}
+
+.lockIcon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 0 12px rgba(124, 92, 255, 0.5));
+}
+
+.lockText {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+.lockBadge {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gatedChildren {
+  filter: blur(3px);
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+}
