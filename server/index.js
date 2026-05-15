@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 
 import { trimVideo } from './lib/ffmpeg.js';
+import { getVideoInfo, downloadVideo } from './lib/ytdlp.js';
+import { detectPlatform, isValidUrl, SUPPORTED_PLATFORMS } from './lib/platforms.js';
 
 dotenv.config();
 
@@ -18,12 +20,15 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in env");
-  process.exit(1);
-}
+let supabase = null;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_ROLE_KEY === 'your_service_role_key_here') {
+  console.warn("⚠️  Missing or placeholder SUPABASE_SERVICE_ROLE_KEY in env.");
+  console.warn("   /api/check-url will work, but /api/render requires a valid key.");
+  console.warn("   Get your key from: https://supabase.com/dashboard/project/xckcepsallcbruluoovx/settings/api\n");
+} else {
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const OUTPUTS_DIR = resolve(join(__dirname, 'outputs'));
 const TEMP_DIR = resolve(join(__dirname, 'temp'));
@@ -38,6 +43,7 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000',
 ];
 
@@ -56,15 +62,82 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 
+// ══════════════════════════════════════════════
+// GET /health
+// ══════════════════════════════════════════════
 app.get('/health', (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, timestamp: new Date().toISOString() });
+});
+
+// ══════════════════════════════════════════════
+// POST /api/check-url
+// Validates a video URL using yt-dlp and returns metadata
+// ══════════════════════════════════════════════
+app.post('/api/check-url', async (req, res) => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ ok: false, error: 'URL is required' });
+    }
+
+    if (!isValidUrl(url)) {
+      return res.status(400).json({ ok: false, error: 'URL tidak valid. Pastikan dimulai dengan http:// atau https://' });
+    }
+
+    const platform = detectPlatform(url);
+
+    console.log(`[check-url] Checking: ${url} | Platform: ${platform?.name || 'unknown'}`);
+
+    // Use yt-dlp to fetch video metadata
+    let videoInfo;
+    try {
+      videoInfo = await getVideoInfo(url);
+    } catch (err) {
+      console.error(`[check-url] yt-dlp error:`, err.message);
+      return res.status(422).json({
+        ok: false,
+        error: err.message,
+        platform: platform?.name || null,
+      });
+    }
+
+    // Build successful response
+    const result = {
+      ok: true,
+      isSupported: true,
+      platform: platform?.name || videoInfo.extractor || 'generic',
+      platformIcon: platform?.icon || '🌐',
+      title: videoInfo.title,
+      duration: videoInfo.duration,
+      thumbnail: videoInfo.thumbnail,
+      webpageUrl: videoInfo.webpageUrl,
+      sourceUrl: videoInfo.webpageUrl,
+      uploader: videoInfo.uploader,
+      uploadDate: videoInfo.uploadDate,
+      viewCount: videoInfo.viewCount,
+      description: videoInfo.description,
+    };
+
+    console.log(`[check-url] ✅ Found: "${result.title}" (${result.duration}s) by ${result.uploader}`);
+    res.json(result);
+
+  } catch (err) {
+    console.error('[check-url] Server error:', err);
+    res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
 });
 
 // ══════════════════════════════════════════════
 // POST /api/render
+// Creates a render job for video processing
 // ══════════════════════════════════════════════
 app.post('/api/render', async (req, res) => {
   try {
+    if (!supabase) {
+      return res.status(503).json({ error: 'Server belum dikonfigurasi. SUPABASE_SERVICE_ROLE_KEY belum diatur.' });
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({ error: 'Missing Authorization header' });
@@ -119,34 +192,132 @@ app.post('/api/render', async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════
+// GET /api/job/:id
+// Get render job status
+// ══════════════════════════════════════════════
+app.get('/api/job/:id', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(503).json({ error: 'Server belum dikonfigurasi.' });
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Missing Authorization header' });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { data: job, error } = await supabase
+      .from('render_jobs')
+      .select('*')
+      .eq('id', req.params.id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error || !job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // If job is completed, add download URL
+    let downloadUrl = null;
+    if (job.status === 'completed' && job.output_video_path) {
+      const { data } = supabase.storage.from('results').getPublicUrl(job.output_video_path);
+      downloadUrl = data.publicUrl;
+    }
+
+    res.json({ ...job, download_url: downloadUrl });
+  } catch (err) {
+    console.error('Get job error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ══════════════════════════════════════════════
+// GET /api/jobs
+// List render jobs for authenticated user
+// ══════════════════════════════════════════════
+app.get('/api/jobs', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(503).json({ error: 'Server belum dikonfigurasi.' });
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Missing Authorization header' });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { data: jobs, error } = await supabase
+      .from('render_jobs')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      return res.status(500).json({ error: 'Failed to fetch jobs' });
+    }
+
+    res.json(jobs || []);
+  } catch (err) {
+    console.error('List jobs error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ══════════════════════════════════════════════
+// Background job processor
+// ══════════════════════════════════════════════
 async function processJob(job) {
   console.log(`[Worker] Starting job ${job.id}`);
   
   await supabase.from('render_jobs').update({ status: 'processing' }).eq('id', job.id);
   
   const jobId = job.id;
-  const inputStoragePath = job.input_video_path;
-  const inputFileName = inputStoragePath.split('/').pop() || `input-${jobId}.mp4`;
-  const tempInputPath = join(TEMP_DIR, `${jobId}-${inputFileName}`);
+  const inputSourceUrl = job.input_video_path;
   
-  const safeTitle = (job.title || 'youklip-output')
+  const safeTitle = (job.title || 'zenira-output')
     .replace(/[^a-z0-9\s]/gi, '')
     .replace(/\s+/g, '-')
     .toLowerCase()
     .substring(0, 40);
     
-  const outputFileName = `youklip-${safeTitle}-${jobId.substring(0,8)}.mp4`;
+  const tempInputPath = join(TEMP_DIR, `${jobId}-input.mp4`);
+  const outputFileName = `zenira-${safeTitle}-${jobId.substring(0,8)}.mp4`;
   const outputFilePath = join(OUTPUTS_DIR, outputFileName);
   
   try {
-    console.log(`[Worker] Downloading ${inputStoragePath} to ${tempInputPath}`);
+    // Determine if input is a storage path or a URL
+    const isUrl = inputSourceUrl.startsWith('http://') || inputSourceUrl.startsWith('https://');
     
-    const { data: downloadData, error: downloadError } = await supabase.storage.from('uploads').download(inputStoragePath);
-    if (downloadError) throw new Error(`Failed to download from storage: ${downloadError.message}`);
-    
-    const buffer = Buffer.from(await downloadData.arrayBuffer());
-    const fs = await import('node:fs/promises');
-    await fs.writeFile(tempInputPath, buffer);
+    if (isUrl) {
+      // Download from URL using yt-dlp
+      console.log(`[Worker] Downloading from URL: ${inputSourceUrl}`);
+      await downloadVideo(inputSourceUrl, tempInputPath, job.quality || '720p');
+    } else {
+      // Download from Supabase Storage
+      console.log(`[Worker] Downloading from storage: ${inputSourceUrl}`);
+      const { data: downloadData, error: downloadError } = await supabase.storage.from('uploads').download(inputSourceUrl);
+      if (downloadError) throw new Error(`Failed to download from storage: ${downloadError.message}`);
+      
+      const buffer = Buffer.from(await downloadData.arrayBuffer());
+      const fs = await import('node:fs/promises');
+      await fs.writeFile(tempInputPath, buffer);
+    }
     
     console.log(`[Worker] Trimming video: start=${job.start_time}, end=${job.end_time}, quality=${job.quality}`);
     const result = await trimVideo(tempInputPath, outputFilePath, job.start_time, job.end_time, { quality: job.quality });
@@ -186,6 +357,9 @@ async function processJob(job) {
 
 app.listen(PORT, () => {
   console.log(`\n🚀 Zenira Backend running on http://localhost:${PORT}`);
-  console.log(`   Health: GET  http://localhost:${PORT}/health`);
-  console.log(`   Render: POST http://localhost:${PORT}/api/render\n`);
+  console.log(`   Health:    GET  http://localhost:${PORT}/health`);
+  console.log(`   Check URL: POST http://localhost:${PORT}/api/check-url`);
+  console.log(`   Render:    POST http://localhost:${PORT}/api/render`);
+  console.log(`   Job:       GET  http://localhost:${PORT}/api/job/:id`);
+  console.log(`   Jobs:      GET  http://localhost:${PORT}/api/jobs\n`);
 });
